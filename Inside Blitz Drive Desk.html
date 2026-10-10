@@ -142,6 +142,7 @@
     .clock-step-actions { display: flex; gap: 4px; }
     .clock-step { flex: 1; min-width: 0; min-height: 29px; padding: 3px 5px; color: var(--pine); border: 1px solid var(--line); border-radius: 3px; background: #fff; font-size: 10px; font-weight: 700; }
     .clock-step:hover { background: var(--mint); }
+    .clock-step.ready { border-color: #8b4513; color: #fff; background: #f28c28; }
     .board-direct-edit { width: 74px; min-height: 30px; padding: 3px 6px; text-align: right; font-variant-numeric: tabular-nums; }
     .board-quarter-edit { width: 76px; min-height: 30px; padding: 3px 6px; }
     input[type="range"].board-slider { width: 100%; height: 24px; min-height: 24px; padding: 0; border: 0; border-radius: 0; background: transparent; accent-color: #1b211c; cursor: grab; }
@@ -348,6 +349,7 @@
               <div class="board-control">
                 <label for="boardDistance">Yards to go</label>
                 <input id="boardDistance" type="number" min="1" max="99" value="10" aria-label="Yards to go">
+                <button class="clock-step" id="firstDownButton" type="button">1st & 10</button>
               </div>
               <div class="board-control">
                 <label for="boardYardLine"><span id="boardYardLineLabel">Visitor yard line</span><output id="boardYardLineDisplay">VIS 25</output></label>
@@ -812,6 +814,9 @@
       }
       $("boardColumnValue").textContent = board.column;
       $("boardRowValue").textContent = board.row;
+      const firstDownMade = board.gainLine != null && board.yardLine >= board.gainLine;
+      $("firstDownButton").classList.toggle("ready", firstDownMade);
+      $("firstDownButton").textContent = firstDownMade ? "First down! Reset to 1st & 10" : "1st & 10";
       $("boardBlueDieValue").textContent = board.blueDie;
       renderDie("redDieFace", "Red", board.column);
       renderDie("whiteDieFace", "White", board.row);
@@ -850,6 +855,7 @@
     }
 
     function syncTabletopFromGame() {
+      state.tabletop.gainLine = null;
       Object.assign(state.tabletop, {
         visitorScore: state.score.visitor,
         homeScore: state.score.home,
@@ -858,6 +864,17 @@
         yardLine: state.ball
       });
       renderTabletop();
+    }
+
+    // The line to gain stays put while the ball moves; yards to go is recomputed from it.
+    function pinGainLine() {
+      const board = state.tabletop;
+      if (board.gainLine == null) board.gainLine = clamp(board.yardLine + board.distance, 1, 100);
+    }
+
+    function updateDistanceFromLine() {
+      const board = state.tabletop;
+      if (board.gainLine != null) board.distance = clamp(Math.round(board.gainLine - board.yardLine), 1, 99);
     }
 
     function updateTabletopInput(event) {
@@ -874,7 +891,10 @@
         if (state.tabletop.yardLine > 50) value = 100 - value;
       }
       if (key === "visitorScore" || key === "homeScore") value = clamp(value, 0, 99);
+      if (inputId === "boardYardLine") pinGainLine();
+      if (key === "distance") state.tabletop.gainLine = null;
       state.tabletop[key] = value;
+      if (inputId === "boardYardLine") updateDistanceFromLine();
       if (inputId === "boardYardLine" && (!state.started || !state.gameOver)) state.ball = clamp(value, 1, 99);
       render();
     }
@@ -886,8 +906,10 @@
 
     function setFieldPosition(ownYards) {
       if (state.gameOver) return;
+      pinGainLine();
       state.ball = clamp(Math.round(ownYards), 1, 99);
       if (!state.started || !state.gameOver) state.tabletop.yardLine = state.ball;
+      updateDistanceFromLine();
       render();
     }
 
@@ -1013,7 +1035,7 @@
       $("ballMarker").textContent = visibleYards;
       const trackPosition = fieldTeam === state.matchup.home ? 100 - fieldYards : fieldYards;
       $("ballMarker").style.left = `${clamp(trackPosition, 2, 98)}%`;
-      const gainLineYards = clamp(fieldYards + state.tabletop.distance, 1, 99);
+      const gainLineYards = state.tabletop.gainLine ?? clamp(fieldYards + state.tabletop.distance, 1, 99);
       const gainLinePosition = fieldTeam === state.matchup.home ? 100 - gainLineYards : gainLineYards;
       $("lineToGain").style.left = `${clamp(gainLinePosition, 2, 98)}%`;
       $("ballMarker").setAttribute("aria-valuenow", fieldYards);
@@ -1094,7 +1116,7 @@
         ? facHistoryIndex >= 0 ? [facDrawHistory[facHistoryIndex]] : []
         : displayedFacCards;
       $("facCards").innerHTML = cardsToShow.map((card) =>
-        `<article class="fac-card"><h4>FAC ${card.number}</h4><pre>${escapeHtml(card.content)}</pre></article>`
+        `<article class="fac-card"><h4>FAC ${card.number}${card.special ? (card.content.includes("FUMBLE") ? " · Fumble" : " · Penalty") : ""}</h4><pre>${escapeHtml(card.content)}</pre></article>`
       ).join("");
       $("previousFacButton").disabled = facHistoryIndex <= 0;
       $("nextFacButton").disabled = facHistoryIndex < 0 || facHistoryIndex >= facDrawHistory.length - 1;
@@ -2125,6 +2147,13 @@
       });
     }
     $("clockMinusForty").addEventListener("click", () => adjustTabletopClock(-40));
+    $("firstDownButton").addEventListener("click", () => {
+      const board = state.tabletop;
+      board.down = 1;
+      board.distance = Math.min(10, 100 - board.yardLine);
+      board.gainLine = null;
+      render();
+    });
     $("clockMinusTen").addEventListener("click", () => adjustTabletopClock(-10));
     $("clockMinusMinute").addEventListener("click", () => adjustTabletopClock(-60));
     $("clockPlusMinute").addEventListener("click", () => adjustTabletopClock(60));

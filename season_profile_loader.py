@@ -569,4 +569,42 @@ def parse_fac_cards(text: str) -> list[dict[str, Any]]:
     missing = sorted(set(range(1, 83)) - cards.keys())
     if missing:
         raise ValueError(f"FAC PDF is missing numbered cards: {', '.join(map(str, missing))}")
-    return [cards[number] for number in range(1, 83)]
+    special = parse_special_fac_cards(text)
+    return [cards[number] for number in range(1, 83)] + special
+
+
+def parse_special_fac_cards(text: str) -> list[dict[str, Any]]:
+    """Penalty and fumble cards, numbered 83-100; strategy cards are skipped."""
+    token = re.compile(r"(?<!\S)(8[3-9]|9\d|100)(?!\S)")
+    header_any = re.compile(r"(?<!\S)(?:\d{1,3}\s+Key\b|8[3-9](?!\S)|9\d(?!\S)|100(?!\S))")
+    found: dict[int, str] = {}
+    for page in text.split("\f"):
+        lines = page.splitlines()
+        for line_index, line in enumerate(lines):
+            matches = list(token.finditer(line))
+            if not matches:
+                continue
+            starts = sorted({match.start() for match in header_any.finditer(line)} | {match.start() for match in re.finditer(r"(?<!\S)\d{1,3}(?=\s+Key\b)", line)})
+            end_line = next((index for index in range(line_index + 1, len(lines)) if header_any.search(lines[index])), min(len(lines), line_index + 24))
+            for match in matches:
+                number = int(match.group(1))
+                column_start = match.start()
+                later = [start for start in starts if start > column_start]
+                # Strategy cards sit to the right of the numbered cards on the same row.
+                strategy = re.search(r"\b(?:NO STRATEGY|RUN KEY|RUN NO KEY|RUN / WRONG|BLITZ|PASS)\b", line[column_start:])
+                limits = later + ([column_start + strategy.start()] if strategy and column_start + strategy.start() > column_start else [])
+                column_end = min(limits) if limits else column_start + 30
+                content_lines: list[str] = []
+                for segment in (item[column_start:column_end] for item in lines[line_index + 1:end_line]):
+                    if re.search(r"\bDEF\s+OFF\b|\bKEY\b|\bBLITZ\b", segment):
+                        break
+                    if re.match(r"\s*(?:Runs?|Quick|Short|Medium|Long|Pass)\b", segment):
+                        continue
+                    if segment.strip():
+                        text_part = re.split(r"\s{3,}", segment.strip())[0]
+                        if len(text_part) > 4:
+                            content_lines.append(re.sub(r"\s+", " ", text_part))
+                content = "\n".join(content_lines)
+                if content and ("PENALTY" in content or "FUMBLE" in content) and number not in found:
+                    found[number] = content
+    return [{"number": number, "content": found[number], "special": True} for number in sorted(found)]
