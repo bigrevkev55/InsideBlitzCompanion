@@ -1,0 +1,2172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Inside Blitz Drive Desk</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18271f;
+      --muted: #65766b;
+      --paper: #f1f5ef;
+      --panel: #fcfdf9;
+      --line: #ced9cd;
+      --pine: #194b3c;
+      --field: #267050;
+      --field-dark: #1c5e43;
+      --gold: #f0bd64;
+      --rust: #bc4939;
+      --rust-pale: #f9e9e4;
+      --mint: #e6f1e8;
+      --shadow: 0 8px 24px rgba(23, 48, 35, .08);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--paper);
+      font: 15px/1.45 "Trebuchet MS", "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+    .masthead {
+      color: #f5f8f1;
+      background-color: var(--pine);
+      background-image: repeating-linear-gradient(118deg, transparent 0 48px, rgba(255,255,255,.035) 49px 50px);
+      border-bottom: 4px solid var(--gold);
+    }
+    .mast-inner, main { width: min(1160px, calc(100% - 36px)); margin: 0 auto; }
+    .mast-inner { padding: 17px 0 19px; }
+    .eyebrow { color: #c8dbcf; font-size: 11px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase; }
+    .mast-row { display: flex; justify-content: space-between; align-items: end; gap: 20px; }
+    h1 { margin: 3px 0 0; font: 700 27px/1.15 Georgia, serif; letter-spacing: 0; }
+    .refs { display: flex; flex-wrap: wrap; gap: 8px 16px; justify-content: end; }
+    .refs a { color: #f1d69c; font-size: 12px; text-underline-offset: 3px; }
+    main { padding: 22px 0 38px; }
+    .scoreboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr minmax(155px, .8fr);
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .score-team { display: flex; align-items: center; gap: 14px; min-height: 89px; padding: 16px 20px; }
+    .score-team + .score-team { border-left: 1px solid var(--line); }
+    .team-mark { display: grid; place-items: center; flex: 0 0 42px; height: 42px; border-radius: 4px; color: white; font-weight: 800; }
+    .team-mark.home { background: var(--rust); }
+    .team-mark.visitor { background: var(--pine); }
+    .team-name { color: var(--muted); font-size: 12px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+    .score { margin-left: auto; font: 700 37px/.95 Georgia, serif; font-variant-numeric: tabular-nums; }
+    .game-clock { display: flex; flex-direction: column; justify-content: center; align-items: center; border-left: 1px solid var(--line); background: #edf3e9; }
+    .game-clock strong { font: 700 29px/1.1 Georgia, serif; font-variant-numeric: tabular-nums; }
+    .game-clock span { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
+    .statusline { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; margin: 12px 2px 19px; color: var(--muted); font-size: 13px; }
+    .statusline .restart-button { min-height: 32px; padding: 5px 10px; color: var(--rust); border-color: #dfb7ad; }
+    .restart-dialog { width: min(430px, calc(100% - 28px)); padding: 0; border: 1px solid var(--line); border-radius: 6px; color: var(--ink); background: var(--panel); box-shadow: 0 18px 55px #10261d55; }
+    .restart-dialog::backdrop { background: rgba(18, 36, 27, .55); }
+    .restart-dialog h2 { margin: 0; padding: 16px 18px 10px; border-bottom: 1px solid var(--line); font-size: 17px; }
+    .restart-dialog p { margin: 0; padding: 14px 18px; color: var(--muted); font-size: 13px; }
+    .restart-actions { display: flex; justify-content: end; gap: 9px; padding: 0 18px 16px; }
+    .restart-actions .danger { color: #fff; background: var(--rust); }
+    .possession { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); font-weight: 700; }
+    .possession::before { width: 9px; height: 9px; border-radius: 50%; background: var(--field); content: ""; }
+    .tag { display: inline-block; padding: 3px 8px; border: 1px solid var(--line); border-radius: 3px; background: #fff; font-size: 11px; font-weight: 700; }
+    .layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(310px, .82fr); align-items: start; gap: 18px; }
+    .stack { display: grid; gap: 16px; }
+    .panel { overflow: hidden; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); box-shadow: var(--shadow); }
+    .panel-head { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+    .panel-head h2 { margin: 0; font-size: 15px; }
+    .panel-body { padding: 16px; }
+    .field-wrap { padding: 14px; color: white; background: var(--field); }
+    .field-labels { display: flex; justify-content: space-between; color: #e0eadf; font-size: 10px; font-weight: 700; letter-spacing: .7px; text-transform: uppercase; }
+    .field-track {
+      position: relative;
+      height: 70px;
+      margin: 8px 0 6px;
+      border: 1px solid rgba(255,255,255,.48);
+      background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(255,255,255,.36) calc(10% - 1px) 10%), repeating-linear-gradient(0deg, var(--field) 0 34px, var(--field-dark) 34px 70px);
+      touch-action: none;
+    }
+    .field-track::before, .field-track::after { position: absolute; top: 0; bottom: 0; width: 1px; background: rgba(255,255,255,.35); content: ""; }
+    .field-track::before { left: 5%; }
+    .field-track::after { right: 5%; }
+    .field-line-to-gain { position: absolute; z-index: 1; top: 0; bottom: 0; left: 35%; width: 3px; background: #f28c28; box-shadow: 0 0 0 1px #743b14aa; pointer-events: none; transition: left .12s ease; }
+    .field-line-to-gain::before { position: absolute; top: 3px; left: 50%; padding: 2px 4px; transform: translateX(-50%); border-radius: 2px; color: #fff; background: #8b4513; content: "TO GAIN"; font-size: 8px; font-weight: 800; white-space: nowrap; }
+    .ball-marker { position: absolute; z-index: 2; top: 50%; left: 25%; display: grid; place-items: center; width: 34px; height: 34px; transform: translate(-50%, -50%); border: 2px solid #fff5d8; border-radius: 50%; color: #302314; background: var(--gold); font-size: 12px; font-weight: 800; box-shadow: 0 2px 7px #133c2c88; transition: left .12s ease; cursor: grab; touch-action: none; user-select: none; }
+    .ball-marker:active { cursor: grabbing; }
+    .ball-marker:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
+    .field-caption { display: flex; justify-content: space-between; color: #e0eadf; font-size: 11px; }
+    .tabletop-body { display: grid; gap: 14px; padding: 15px; }
+    .board-score-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .board-score-side { display: grid; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+    .board-score-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+    .board-score-name { color: var(--muted); font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; }
+    .board-score-value { width: 86px; min-height: 40px; padding: 2px 5px; border: 1px solid transparent; border-radius: 3px; color: var(--ink); background: transparent; font: 700 31px/1 Georgia, serif; font-variant-numeric: tabular-nums; text-align: right; }
+    .board-score-value:hover, .board-score-value:focus { border-color: var(--line); background: #fff; }
+    .tabletop-columns { display: grid; grid-template-columns: minmax(215px, .9fr) minmax(320px, 1.2fr) minmax(170px, .65fr); gap: 12px; align-items: start; }
+    .board-area { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+    .board-area h3 { margin: 0 0 10px; font-size: 13px; }
+    .board-control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .matrix-dice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 12px; padding: 10px; border: 1px solid var(--line); border-radius: 4px; background: #f7faf5; }
+    .matrix-die-group { display: grid; justify-items: center; gap: 4px; min-width: 54px; }
+    .matrix-die-label { color: var(--muted); font-size: 10px; font-weight: 700; }
+    .matrix-die { display: grid; grid-template: repeat(3, 1fr) / repeat(3, 1fr); gap: 2px; width: 42px; aspect-ratio: 1; padding: 4px; border: 1px solid #15251f44; border-radius: 6px; box-shadow: 0 2px 3px #15251f22; }
+    .matrix-die.red { background: #bc4939; }
+    .matrix-die.white { background: #fff; }
+    .matrix-die.blue { background: #286b83; }
+    .matrix-die-pip { display: grid; place-items: center; }
+    .matrix-die-pip::after { width: 7px; aspect-ratio: 1; border-radius: 50%; background: transparent; content: ""; }
+    .matrix-die-pip.on::after { background: #fff; }
+    .matrix-die.white .matrix-die-pip.on::after { background: #25332d; }
+    .matrix-dice .secondary { margin-left: auto; }
+    .actual-rolls { display: grid; margin-top: 12px; border-top: 1px solid var(--line); }
+    .actual-roll-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 40px; padding: 5px 0; border-bottom: 1px solid var(--line); }
+    .actual-roll-head strong { color: var(--ink); font-size: 11px; }
+    .actual-roll-row { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 43px; padding: 5px 0; border-bottom: 1px solid #edf1eb; }
+    .actual-roll-title { color: var(--ink); font-size: 10px; font-weight: 700; }
+    .actual-roll-faces { display: flex; flex-wrap: nowrap; gap: 3px; }
+    .matrix-die.mini { width: 30px; gap: 1px; padding: 3px; border-radius: 4px; }
+    .matrix-die.mini .matrix-die-pip::after { width: 5px; }
+    .actual-roll-button { min-height: 30px; padding: 4px 7px; font-size: 10px; }
+    .board-control { display: grid; min-width: 0; gap: 5px; }
+    .board-control.full { grid-column: 1 / -1; }
+    .down-button-group { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+    .down-button { min-width: 0; min-height: 34px; padding: 5px 3px; border: 1px solid var(--line); border-radius: 3px; color: var(--pine); background: #fff; font-size: 11px; font-weight: 700; }
+    .down-button[aria-pressed="true"] { border-color: var(--pine); color: #fff; background: var(--pine); }
+    .board-control label { display: flex; justify-content: space-between; gap: 7px; }
+    .board-control output { color: var(--ink); font-variant-numeric: tabular-nums; }
+    .board-control-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 27px; }
+    .clock-step-actions { display: flex; gap: 4px; }
+    .clock-step { flex: 1; min-width: 0; min-height: 29px; padding: 3px 5px; color: var(--pine); border: 1px solid var(--line); border-radius: 3px; background: #fff; font-size: 10px; font-weight: 700; }
+    .clock-step:hover { background: var(--mint); }
+    .board-direct-edit { width: 74px; min-height: 30px; padding: 3px 6px; text-align: right; font-variant-numeric: tabular-nums; }
+    .board-quarter-edit { width: 76px; min-height: 30px; padding: 3px 6px; }
+    input[type="range"].board-slider { width: 100%; height: 24px; min-height: 24px; padding: 0; border: 0; border-radius: 0; background: transparent; accent-color: #1b211c; cursor: grab; }
+    input[type="range"].board-slider:active { cursor: grabbing; }
+    input[type="range"].board-slider::-webkit-slider-runnable-track { height: 5px; border-radius: 3px; background: #d5dfd4; }
+    input[type="range"].board-slider::-webkit-slider-thumb { width: 18px; height: 18px; margin-top: -7px; appearance: none; border: 2px solid #fff; border-radius: 50%; background: #171b18; box-shadow: 0 0 0 1px #68756b, 0 1px 3px #0005; }
+    input[type="range"].board-slider::-moz-range-track { height: 5px; border-radius: 3px; background: #d5dfd4; }
+    input[type="range"].board-slider::-moz-range-thumb { width: 14px; height: 14px; border: 2px solid #fff; border-radius: 50%; background: #171b18; box-shadow: 0 0 0 1px #68756b, 0 1px 3px #0005; }
+    .board-matrix-wrap { overflow-x: auto; }
+    .board-matrix { width: 100%; min-width: 275px; border-collapse: collapse; table-layout: fixed; text-align: center; font-size: 11px; }
+    .board-matrix th, .board-matrix td { height: 27px; padding: 3px; border: 1px solid #c9d3c8; }
+    .board-matrix thead th { color: white; background: #bb302b; }
+    .board-matrix tbody th { color: white; background: #2d5eaa; }
+    .board-matrix td.selected { outline: 2px solid #d9862c; outline-offset: -2px; color: #13281d; background: #f5d57b; font-weight: 800; }
+    .board-play-result { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 10px; padding: 9px 10px; border-radius: 3px; color: #fff; background: var(--pine); }
+    .board-play-result strong { color: #fff; font: 700 20px Georgia, serif; }
+    .board-links { display: grid; gap: 8px; }
+    .board-links a { color: var(--pine); font-size: 12px; font-weight: 700; text-underline-offset: 3px; }
+    .board-note { margin: 0; color: var(--muted); font-size: 11px; }
+    .alignment-range-key { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+    .alignment-range { display: inline-flex; align-items: baseline; gap: 5px; padding: 4px 7px; border: 1px solid var(--line); border-radius: 3px; color: var(--muted); background: #fff; font-size: 10px; }
+    .alignment-range strong { color: var(--ink); font-size: 11px; }
+    .alignment-range.active { border-color: var(--field); color: var(--ink); background: var(--mint); box-shadow: inset 0 0 0 1px var(--field); }
+    .fac-tool { display: grid; gap: 10px; margin: 15px 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: #f7faf5; }
+    .fac-tool-head, .fac-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+    .fac-tool-head { justify-content: space-between; }
+    .fac-tool-status { color: var(--muted); font-size: 12px; }
+    .fac-actions button { min-height: 34px; padding: 6px 10px; }
+    .fac-card-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 10px; }
+    .fac-card { min-width: 0; padding: 10px; border: 1px solid var(--line); border-radius: 3px; background: white; }
+    .fac-card h4 { margin: 0 0 7px; color: var(--pine); font-size: 13px; }
+    .fac-card pre { overflow: auto; max-height: 270px; margin: 0; color: var(--ink); font: 11px/1.35 Consolas, "Courier New", monospace; white-space: pre; }
+    .switch-start-control { max-width: 300px; margin: 13px 0 0 auto; }
+    .start-spot-inputs { display: grid; grid-template-columns: minmax(0, 1fr) 86px; gap: 8px; }
+    .drive-prompt { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin: 15px 0 0; }
+    .drive-prompt p { margin: 0; color: var(--muted); font-size: 13px; }
+    .primary, .secondary, .quiet {
+      min-height: 39px;
+      padding: 8px 13px;
+      border: 1px solid transparent;
+      border-radius: 4px;
+      font-weight: 700;
+      transition: background-color .15s ease, transform .15s ease;
+    }
+    .primary { color: #fff; background: var(--pine); }
+    .primary:hover:not(:disabled) { background: #236149; transform: translateY(-1px); }
+    .secondary { color: var(--pine); border-color: var(--line); background: #fff; }
+    .secondary:hover { background: var(--mint); }
+    .quiet { min-height: auto; padding: 4px 0; color: var(--rust); background: transparent; font-size: 12px; }
+    button:disabled { cursor: not-allowed; opacity: .5; }
+    .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .control { display: grid; gap: 5px; }
+    .control.wide { grid-column: 1 / -1; }
+    label { color: var(--muted); font-size: 11px; font-weight: 700; }
+    input, select { width: 100%; min-height: 39px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 4px; color: var(--ink); background: #fff; }
+    input:focus, select:focus, button:focus-visible, a:focus-visible { outline: 2px solid #dc9f43; outline-offset: 2px; }
+    .form-note { margin: 10px 0 0; color: var(--muted); font-size: 11px; }
+    .model-note { padding: 12px 14px; border-left: 3px solid var(--gold); color: #46594c; background: #f3f5e9; font-size: 12px; }
+    .model-note strong { color: var(--ink); }
+    .profile-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+    .profile-stat { padding: 9px 10px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+    .profile-stat b { display: block; font: 700 20px/1.1 Georgia, serif; }
+    .profile-stat span { color: var(--muted); font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .log-list { display: grid; gap: 8px; max-height: 610px; overflow-y: auto; }
+    .log-entry { border: 1px solid var(--line); border-radius: 4px; background: #fff; }
+    .log-summary { display: grid; grid-template-columns: 40px 1fr auto; align-items: center; gap: 10px; padding: 10px; }
+    .drive-index { display: grid; place-items: center; height: 34px; border-radius: 3px; color: #fff; background: var(--field); font-size: 11px; font-weight: 800; }
+    .log-entry.visitor .drive-index { background: var(--rust); }
+    .log-title { font-size: 12px; font-weight: 700; }
+    .log-sub { color: var(--muted); font-size: 11px; }
+    .log-points { font: 700 20px Georgia, serif; font-variant-numeric: tabular-nums; }
+    details { border-top: 1px solid var(--line); }
+    summary { padding: 7px 10px; color: var(--pine); cursor: pointer; font-size: 11px; font-weight: 700; }
+    .play-list { display: grid; gap: 1px; padding: 0 10px 8px; }
+    .play-row { display: grid; grid-template-columns: 52px 1fr auto; gap: 8px; padding: 5px 0; border-top: 1px solid #edf1eb; font-size: 11px; }
+    .play-row.decision-row { margin-top: 3px; padding: 7px 6px; border: 0; color: #3e4c40; background: #f1f3e7; font-weight: 700; }
+    .play-row.kick-row { padding: 7px 6px; color: #174838; background: #eaf2ed; }
+    .play-row span:first-child { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .play-row span:last-child { text-align: right; font-weight: 700; }
+    .empty-log { padding: 24px 14px; border: 1px dashed var(--line); color: var(--muted); text-align: center; font-size: 13px; }
+    .setup-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 10px; align-items: end; }
+    .season-loader { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 12px; }
+    .team-picker-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .start-mode-toggle { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; padding: 3px; border: 1px solid var(--line); border-radius: 4px; background: #f7faf5; }
+    .start-mode-toggle button { min-height: 34px; padding: 5px 8px; border: 1px solid transparent; border-radius: 3px; color: var(--muted); background: transparent; font-size: 12px; font-weight: 700; }
+    .start-mode-toggle button[aria-pressed="true"] { border-color: var(--pine); color: #fff; background: var(--pine); }
+    .season-status { grid-column: 1 / -1; margin: 0; color: var(--muted); font-size: 11px; }
+    .setup { margin-bottom: 16px; padding: 14px; border: 1px solid var(--line); border-radius: 6px; background: #e9f0e7; }
+    .setup h2 { margin: 0 0 10px; font-size: 14px; }
+    .setup-row .control { min-width: 0; }
+    .footnote { margin: 14px 2px 0; color: var(--muted); font-size: 11px; }
+    .toast { position: fixed; right: 18px; bottom: 18px; z-index: 5; max-width: min(360px, calc(100vw - 36px)); padding: 11px 14px; border-radius: 4px; color: #fff; background: var(--ink); box-shadow: var(--shadow); opacity: 0; pointer-events: none; transform: translateY(8px); transition: .2s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    @media (max-width: 780px) {
+      .mast-row { align-items: start; flex-direction: column; }
+      .refs { justify-content: start; }
+      .layout { grid-template-columns: 1fr; }
+      .scoreboard { grid-template-columns: 1fr 1fr; }
+      .game-clock { grid-column: 1 / -1; min-height: 58px; flex-direction: row; gap: 12px; border-top: 1px solid var(--line); border-left: 0; }
+      .tabletop-columns { grid-template-columns: 1fr 1fr; }
+      .board-area.refs-area { grid-column: 1 / -1; }
+    }
+    @media (max-width: 480px) {
+      .mast-inner, main { width: min(100% - 22px, 1160px); }
+      .mast-inner { padding: 14px 0; }
+      h1 { font-size: 23px; }
+      main { padding-top: 14px; }
+      .score-team { min-height: 76px; gap: 8px; padding: 11px; }
+      .team-mark { flex-basis: 34px; height: 34px; }
+      .score { font-size: 31px; }
+      .team-name { font-size: 10px; }
+      .setup-row { grid-template-columns: 1fr 1fr; }
+      .setup-row button { grid-column: 1 / -1; }
+      .season-loader { grid-template-columns: 1fr; }
+      .team-picker-row { grid-template-columns: 1fr; }
+      .season-status { grid-column: auto; }
+      .profile-grid { grid-template-columns: 1fr 1fr; }
+      .board-score-row, .tabletop-columns { grid-template-columns: 1fr; }
+      .board-area.refs-area { grid-column: auto; }
+      .drive-prompt { align-items: stretch; flex-direction: column; }
+      .drive-prompt button { width: 100%; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body>
+  <header class="masthead">
+    <div class="mast-inner">
+      <div class="eyebrow">Inside Blitz · tabletop companion · <span id="seasonLabel">Season data</span></div>
+      <div class="mast-row">
+        <h1 id="matchupTitle">Visitors at Home</h1>
+        <nav class="refs" aria-label="Reference PDFs">
+          <a href="Inside%20Blitz%20Drive%20Desk%20Guide.html">How to use</a>
+          <a href="IB%20-%20Game%20Rules%20v3.pdf" target="_blank" rel="noreferrer">Game rules</a>
+          <a href="IB%20CHART%20V3.pdf" target="_blank" rel="noreferrer">Game charts</a>
+          <a href="IB%202009%20NFL.pdf" target="_blank" rel="noreferrer">2009 team cards</a>
+          <a href="FAC%20PDF.pdf" target="_blank" rel="noreferrer">FAC deck</a>
+        </nav>
+      </div>
+    </div>
+  </header>
+  <main>
+    <section class="scoreboard" aria-label="Scoreboard">
+      <div class="score-team">
+        <div class="team-mark visitor" id="visitorMark">VIS</div>
+        <div><div class="team-name"><span id="visitorName">Visitors</span> · Visitors</div><div class="score" id="visitorScore">0</div></div>
+      </div>
+      <div class="score-team">
+        <div class="team-mark home" id="homeMark">HOME</div>
+        <div><div class="team-name"><span id="homeName">Home</span> · Home</div><div class="score" id="homeScore">0</div></div>
+      </div>
+      <div class="game-clock"><strong id="clock">15:00</strong><span id="period">1st quarter</span></div>
+    </section>
+    <div class="statusline">
+      <span class="possession" id="possessionText">Set the opening possession to begin.</span>
+      <span class="tag" id="ballTag">Ball position</span>
+      <span class="tag" id="seedTag">Seed: Random on start</span>
+      <button class="secondary restart-button" id="restartGameButton" type="button">Restart game</button>
+    </div>
+
+    <section class="panel" aria-label="Inside Blitz game board">
+      <div class="panel-head"><h2>Inside Blitz game board</h2><span class="tag">Manual play · Inside Blitz</span></div>
+      <div class="tabletop-body">
+        <div class="board-score-row">
+          <div class="board-score-side">
+            <div class="board-score-head"><span class="board-score-name">Visitors · <span id="boardVisitorName">Visitors</span></span><input class="board-score-value" id="boardVisitorScoreEdit" type="number" min="0" max="99" step="1" value="0" aria-label="Edit visitors score"></div>
+            <input class="board-slider" id="boardVisitorScore" type="range" min="0" max="99" step="1" value="0" aria-label="Visitors score slider">
+          </div>
+          <div class="board-score-side">
+            <div class="board-score-head"><span class="board-score-name">Home · <span id="boardHomeName">Home</span></span><input class="board-score-value" id="boardHomeScoreEdit" type="number" min="0" max="99" step="1" value="0" aria-label="Edit home score"></div>
+            <input class="board-slider" id="boardHomeScore" type="range" min="0" max="99" step="1" value="0" aria-label="Home score slider">
+          </div>
+        </div>
+        <section class="board-area field-area" aria-label="Field position">
+          <h3>Field position</h3>
+          <div class="field-wrap">
+            <div class="field-labels"><span id="visitorGoalName">Visitors goal</span><span>Midfield</span><span id="homeGoalName">Home goal</span></div>
+            <div class="field-track" id="fieldTrack"><div class="field-line-to-gain" id="lineToGain" aria-hidden="true"></div><div class="ball-marker" id="ballMarker" role="slider" tabindex="0" aria-label="Draggable ball position" aria-valuemin="1" aria-valuemax="99" aria-valuenow="25">25</div></div>
+            <div class="field-caption"><span id="visitorDirection">Visitors attack right</span><span id="fieldPositionCaption">Position shown from possession</span><span id="homeDirection">Home attacks left</span></div>
+          </div>
+        </section>
+        <div class="tabletop-columns">
+          <section class="board-area">
+            <h3>Game state</h3>
+            <div class="board-control-grid">
+              <div class="board-control">
+                <div class="board-control-head"><label for="boardQuarter">Quarter</label><select class="board-quarter-edit" id="boardQuarterSelect" aria-label="Edit quarter"><option value="1">1st</option><option value="2">2nd</option><option value="3">3rd</option><option value="4">4th</option></select></div>
+                <input class="board-slider" id="boardQuarter" type="range" min="1" max="4" step="1" value="1" aria-label="Quarter slider">
+              </div>
+              <div class="board-control">
+                <div class="board-control-head"><label for="boardClock">Time left</label><input class="board-direct-edit" id="boardClockText" type="text" value="15:00" inputmode="numeric" maxlength="5" pattern="[0-1][0-9]:[0-5][0-9]" aria-label="Edit time remaining as minutes and seconds"></div>
+                <div class="clock-step-actions"><button class="clock-step" id="clockMinusForty" type="button" aria-label="Subtract 40 seconds">-:40 sec</button><button class="clock-step" id="clockMinusTen" type="button" aria-label="Subtract 10 seconds">-:10 sec</button><button class="clock-step" id="clockMinusMinute" type="button" aria-label="Subtract one minute">- 1 min</button><button class="clock-step" id="clockPlusMinute" type="button" aria-label="Add one minute">+ 1 min</button></div>
+                <input class="board-slider" id="boardClock" type="range" min="0" max="900" step="10" value="900" aria-label="Quarter clock slider">
+              </div>
+              <div class="board-control">
+                <label>Down</label>
+                <div class="down-button-group" role="group" aria-label="Down">
+                  <button class="down-button" type="button" data-down="1" aria-pressed="true">1st</button>
+                  <button class="down-button" type="button" data-down="2" aria-pressed="false">2nd</button>
+                  <button class="down-button" type="button" data-down="3" aria-pressed="false">3rd</button>
+                  <button class="down-button" type="button" data-down="4" aria-pressed="false">4th</button>
+                </div>
+              </div>
+              <div class="board-control">
+                <label for="boardDistance">Yards to go</label>
+                <input id="boardDistance" type="number" min="1" max="99" value="10" aria-label="Yards to go">
+              </div>
+              <div class="board-control">
+                <label for="boardYardLine"><span id="boardYardLineLabel">Visitor yard line</span><output id="boardYardLineDisplay">VIS 25</output></label>
+                <input id="boardYardLine" type="number" min="1" max="99" value="25" aria-label="Visitor field position">
+              </div>
+              <div class="board-control">
+                <label for="boardVisitorOffIndex"><span id="visitorOffLabel">Visitor OFF index</span></label>
+                <input id="boardVisitorOffIndex" type="number" min="-20" max="20" value="0" aria-label="Visitor offensive index">
+              </div>
+              <div class="board-control">
+                <label for="boardVisitorDefIndex"><span id="visitorDefLabel">Visitor DEF index</span></label>
+                <input id="boardVisitorDefIndex" type="number" min="-20" max="20" value="0" aria-label="Visitor defensive index">
+              </div>
+              <div class="board-control">
+                <label for="boardHomeOffIndex"><span id="homeOffLabel">Home OFF index</span></label>
+                <input id="boardHomeOffIndex" type="number" min="-20" max="20" value="4" aria-label="Home offensive index">
+              </div>
+              <div class="board-control full">
+                <label for="boardHomeDefIndex"><span id="homeDefLabel">Home DEF index</span> <output id="boardCombinedIndex">Visitors +2 · Home +4</output></label>
+                <input id="boardHomeDefIndex" type="number" min="-20" max="20" value="2" aria-label="Home defensive index">
+              </div>
+            </div>
+            <div class="actual-rolls" aria-label="Actual play dice">
+              <div class="actual-roll-head"><strong>Actual play rolls</strong><button class="secondary actual-roll-button" id="rollAllActualDice" type="button">Roll all five sets</button></div>
+              <div class="actual-roll-row">
+                <span class="actual-roll-title">Off Play</span>
+                <div class="actual-roll-faces"><div class="matrix-die mini red" id="actualOffRed" role="img"></div><div class="matrix-die mini white" id="actualOffWhite" role="img"></div><div class="matrix-die mini blue" id="actualOffBlue" role="img"></div></div>
+                <button class="secondary actual-roll-button" id="rollActualOffPlay" type="button">Roll</button>
+              </div>
+              <div class="actual-roll-row">
+                <span class="actual-roll-title">Pass yards</span>
+                <div class="actual-roll-faces"><div class="matrix-die mini red" id="actualPassRed" role="img"></div><div class="matrix-die mini white" id="actualPassWhite" role="img"></div></div>
+                <button class="secondary actual-roll-button" id="rollActualPassYards" type="button">Roll</button>
+              </div>
+              <div class="actual-roll-row">
+                <span class="actual-roll-title">Sec Rec</span>
+                <div class="actual-roll-faces"><div class="matrix-die mini red" id="actualSecRed" role="img"></div><div class="matrix-die mini white" id="actualSecWhite" role="img"></div><div class="matrix-die mini blue" id="actualSecBlue" role="img"></div></div>
+                <button class="secondary actual-roll-button" id="rollActualSecRec" type="button">Roll</button>
+              </div>
+              <div class="actual-roll-row">
+                <span class="actual-roll-title">Scramble</span>
+                <div class="actual-roll-faces"><div class="matrix-die mini red" id="actualScrambleRed" role="img"></div><div class="matrix-die mini white" id="actualScrambleWhite" role="img"></div><div class="matrix-die mini blue" id="actualScrambleBlue" role="img"></div></div>
+                <button class="secondary actual-roll-button" id="rollActualScramble" type="button">Roll</button>
+              </div>
+              <div class="actual-roll-row">
+                <span class="actual-roll-title">Extra</span>
+                <div class="actual-roll-faces"><div class="matrix-die mini red" id="actualExtraRed" role="img"></div><div class="matrix-die mini white" id="actualExtraWhite" role="img"></div><div class="matrix-die mini blue" id="actualExtraBlue" role="img"></div></div>
+                <button class="secondary actual-roll-button" id="rollActualExtra" type="button">Roll</button>
+              </div>
+            </div>
+          </section>
+
+          <section class="board-area">
+            <h3 id="boardMatrixTitle">Starters play-call matrix</h3>
+            <div class="matrix-dice" aria-label="Play-call dice">
+              <div class="matrix-die-group"><span class="matrix-die-label">Red · column</span><div class="matrix-die red" id="redDieFace" role="img" aria-label="Red die shows 4"></div></div>
+              <div class="matrix-die-group"><span class="matrix-die-label">White · row</span><div class="matrix-die white" id="whiteDieFace" role="img" aria-label="White die shows 1"></div></div>
+              <div class="matrix-die-group"><span class="matrix-die-label">Blue · strategy</span><div class="matrix-die blue" id="blueDieFace" role="img" aria-label="Blue die shows 1"></div></div>
+              <button class="secondary" id="rollPlayDiceButton" type="button">Roll play-call dice</button>
+            </div>
+            <div class="board-control-grid">
+              <div class="board-control">
+                <label for="boardColumn">Red die · column <output id="boardColumnValue">4</output></label>
+                <input class="board-slider" id="boardColumn" type="range" min="1" max="6" step="1" value="4" aria-label="Red die column slider">
+              </div>
+              <div class="board-control">
+                <label for="boardRow">White die · row <output id="boardRowValue">1</output></label>
+                <input class="board-slider" id="boardRow" type="range" min="1" max="6" step="1" value="1" aria-label="White die row slider">
+              </div>
+              <div class="board-control">
+                <label for="boardBlueDie">Blue die · strategy <output id="boardBlueDieValue">1</output></label>
+                <input class="board-slider" id="boardBlueDie" type="range" min="1" max="6" step="1" value="1" aria-label="Blue die strategy slider">
+              </div>
+              <div class="board-control full">
+                <label for="boardStrategy">Defensive alignment</label>
+                <select id="boardStrategy"><option value="Automatic">Suggested from OFF index</option><option value="Short">Short (3rd/4th &amp; 1, 1-2 yard lines)</option><option value="Run">Run (9 or less)</option><option value="Starters">Starters (10-19)</option><option value="Nickel">Nickel (20-29)</option><option value="Dime">Dime (30+)</option></select>
+                <div class="alignment-range-key" aria-label="Suggested defense alignment ranges">
+                  <span class="alignment-range" data-alignment="Short"><strong>Short</strong><span>3rd/4th &amp; 1; 1-2 yard lines</span></span>
+                  <span class="alignment-range" data-alignment="Run"><strong>Run</strong><span>9 or less</span></span>
+                  <span class="alignment-range" data-alignment="Starters"><strong>Starters</strong><span>10-19</span></span>
+                  <span class="alignment-range" data-alignment="Nickel"><strong>Nickel</strong><span>20-29</span></span>
+                  <span class="alignment-range" data-alignment="Dime"><strong>Dime</strong><span>30+</span></span>
+                </div>
+              </div>
+            </div>
+            <div class="board-matrix-wrap"><table class="board-matrix" id="boardMatrix" aria-label="Inside Blitz play call matrix"></table></div>
+            <div class="board-play-result"><span>Selected play · <span id="boardDiceText">4-1-1</span></span><strong id="boardPlayCall">QP</strong></div>
+            <div class="board-play-result"><span>Blue-die strategy</span><strong id="boardStrategyValue">Key</strong></div>
+          </section>
+
+          <section class="board-area refs-area">
+            <h3>Printed references</h3>
+            <div class="board-links">
+              <a href="IB%20CHART%20V3.pdf" target="_blank" rel="noreferrer">Lookup, penalty and injury charts</a>
+              <a href="IB%20-%20Game%20Rules%20v3.pdf" target="_blank" rel="noreferrer">Game rules and solitaire calls</a>
+              <a href="IB%202009%20NFL.pdf" target="_blank" rel="noreferrer">2009 team cards</a>
+              <a href="FAC%20PDF.pdf" target="_blank" rel="noreferrer">FAC cards</a>
+            </div>
+            <div class="fac-tool">
+              <div class="fac-tool-head"><strong>FAC deck</strong><span class="fac-tool-status" id="facDeckStatus" role="status">Loading numbered FACs...</span></div>
+              <div class="fac-actions">
+                <button class="secondary" id="drawFacButton" type="button">Draw FAC</button>
+                <button class="secondary" id="addFacButton" type="button">Add another</button>
+                <button class="quiet" id="previousFacButton" type="button" disabled>Previous FAC</button>
+                <button class="quiet" id="nextFacButton" type="button" disabled>Next FAC</button>
+                <button class="quiet" id="reshuffleFacButton" type="button">Reshuffle deck</button>
+              </div>
+              <div class="fac-card-list" id="facCards" aria-live="polite"></div>
+            </div>
+            <p class="board-note" id="boardAlignmentNote">Suggested alignment uses down × yards-to-go plus the combined team index. Short alignment applies on 3rd/4th and 1, or at the 1-2 yard line.</p>
+          </section>
+        </div>
+        <p class="board-note">Move the black sliders to set the board. Record the current team's score and clock when ending its drive.</p>
+      </div>
+    </section>
+
+    <section class="setup" id="setupPanel" aria-label="Game setup">
+      <h2>Start game</h2>
+      <div class="season-loader">
+        <div class="control">
+          <label for="seasonFile">Inside Sports season PDF</label>
+          <input id="seasonFile" type="file" accept="application/pdf,.pdf" aria-label="Upload season PDF">
+        </div>
+        <button class="secondary" id="loadSeasonButton" type="button">Load season</button>
+        <p class="season-status" id="seasonStatus" role="status">Load a season PDF to populate teams and season-card data.</p>
+      </div>
+      <div class="team-picker-row">
+        <div class="control">
+          <label for="visitorTeamSelect">Visitors</label>
+          <select id="visitorTeamSelect"></select>
+        </div>
+        <div class="control">
+          <label for="homeTeamSelect">Home</label>
+          <select id="homeTeamSelect"></select>
+        </div>
+      </div>
+      <div class="control wide start-mode-control">
+        <label>Start mode</label>
+        <div class="start-mode-toggle" role="group" aria-label="Start mode">
+          <button class="start-mode-button" type="button" data-start-mode="new" aria-pressed="true">New game</button>
+          <button class="start-mode-button" type="button" data-start-mode="in-progress" aria-pressed="false">Game in progress</button>
+        </div>
+        <p class="form-note" id="startModeNote">Starts 0-0 at 15:00 with the opening team at its own 25.</p>
+      </div>
+      <div class="setup-row">
+        <div class="control">
+          <label id="firstPossessionLabel" for="firstPossession">Opening possession</label>
+          <select id="firstPossession"><option value="visitor">Visitors</option><option value="home">Home</option></select>
+        </div>
+        <div class="control">
+          <label for="seedInput">Roll seed</label>
+          <input id="seedInput" type="text" value="" placeholder="Random on start" maxlength="24" autocomplete="off">
+        </div>
+        <button class="primary" id="startButton" type="button">Start new game</button>
+      </div>
+    </section>
+
+    <div class="layout">
+      <div class="stack">
+        <section class="panel">
+          <div class="panel-head"><h2>Drive actions</h2><span class="tag" id="downTag">Ready</span></div>
+          <div class="panel-body">
+            <div id="driveControls" hidden>
+              <div class="controls">
+                <div class="control wide">
+                  <label for="drivePlayStyle"><span id="drivePlayStyleLabel">Offensive play mix</span></label>
+                  <select id="drivePlayStyle"><option value="balanced">Balanced</option><option value="run">Run-heavy</option><option value="pass">Pass-heavy</option></select>
+                </div>
+              </div>
+              <div class="drive-prompt"><p id="drivePrompt">Simulate a drive for the team with the ball.</p><button class="primary" id="simulateButton" type="button">Simulate Drive</button></div>
+            </div>
+            <div id="recordControls" hidden>
+              <div class="controls">
+                <div class="control">
+                  <label for="manualDriveResult">Tabletop drive result</label>
+                  <select id="manualDriveResult">
+                    <option value="punt">Punt</option><option value="field-goal">Field goal</option><option value="touchdown">Touchdown</option><option value="turnover">Turnover</option><option value="downs">Turnover on downs</option><option value="safety">Safety</option><option value="other">Other / custom</option>
+                  </select>
+                </div>
+              </div>
+              <p class="form-note">Enter the current team's tabletop result and score, then switch possession.</p>
+              <div class="drive-prompt"><p id="recordPrompt">Record this drive and give the other team the ball.</p><button class="primary" id="recordButton" type="button">Record &amp; Switch</button></div>
+              <div class="control switch-start-control">
+                <label for="nextStartYard">Next possession starting field position</label>
+                <div class="start-spot-inputs">
+                  <select id="nextStartSide" aria-label="Next possession territory"><option value="home">Home territory</option><option value="visitor">Visitor territory</option></select>
+                  <input id="nextStartYard" type="number" min="1" max="50" value="25" aria-label="Starting yard line in selected territory">
+                </div>
+              </div>
+              <div class="drive-prompt"><p>Switch without recording a drive. Use 25 for a touchback, or enter the next team's starting spot.</p><button class="secondary" id="switchPossessionButton" type="button">Switch possession</button></div>
+            </div>
+            <div id="pregamePrompt"><p class="form-note">Choose who receives first. A new game starts at that team's own 25-yard line.</p></div>
+            <div id="gameOverPrompt" hidden><div class="drive-prompt"><p id="finalText"></p><button class="secondary" id="newGameButton" type="button">Set up another game</button></div></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <div class="panel-head"><h2 id="homeProfileTitle">Home profile</h2><span class="tag" id="homeProfileSeason">Season card</span></div>
+          <div class="panel-body">
+            <div class="profile-grid">
+              <div class="profile-stat"><b id="homeRecord">-</b><span>Record</span></div>
+              <div class="profile-stat"><b id="homePointsFor">-</b><span>Points for</span></div>
+              <div class="profile-stat"><b id="homePassLine">-</b><span>Pass att / comp</span></div>
+              <div class="profile-stat"><b id="homePassYards">-</b><span>Pass yards</span></div>
+            </div>
+            <p class="footnote" id="homeProfileNote"></p>
+          </div>
+        </section>
+
+        <div class="model-note"><strong>How this engine works:</strong> For each possession, simulate the current offense from its loaded profile or enter the tabletop result and switch. Exact FAC key-position mapping and some S/B and receiver-yardage lookup cells remain approximated.</div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head"><h2>Drive ledger</h2><button class="quiet" id="clearLogButton" type="button">Clear ledger</button></div>
+        <div class="panel-body"><div class="log-list" id="driveLog"><div class="empty-log">Home drive summaries and play rolls will appear here.</div></div></div>
+      </section>
+    </div>
+  </main>
+  <dialog class="restart-dialog" id="restartDialog" aria-labelledby="restartDialogTitle" aria-describedby="restartDialogMessage">
+    <h2 id="restartDialogTitle">Start over completely?</h2>
+    <p id="restartDialogMessage">This resets the score, quarter, clock, field position, board controls, drive ledger, and current game. This cannot be undone.</p>
+    <div class="restart-actions">
+      <button class="secondary" id="cancelRestartButton" type="button">Cancel</button>
+      <button class="primary danger" id="confirmRestartButton" type="button">Confirm restart</button>
+    </div>
+  </dialog>
+  <dialog class="restart-dialog" id="startConfirmDialog" aria-labelledby="startConfirmTitle" aria-describedby="startConfirmMessage">
+    <h2 id="startConfirmTitle">Start a new game?</h2>
+    <p id="startConfirmMessage"></p>
+    <div class="restart-actions">
+      <button class="secondary" id="cancelStartButton" type="button">Cancel</button>
+      <button class="primary" id="confirmStartButton" type="button">Start new game</button>
+    </div>
+  </dialog>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const state = {
+      started: false,
+      gameOver: false,
+      startMode: "new",
+      quarter: 1,
+      clock: 900,
+      matchup: { visitor: "", home: "" },
+      possession: "visitor",
+      ball: 25,
+      score: { home: 0, visitor: 0 },
+      driveNumber: 0,
+      driveNumbers: { home: 0, visitor: 0 },
+      seed: "",
+      random: Math.random,
+      currentFac: null,
+      elapsedGameSeconds: 0,
+      tabletop: {
+        visitorScore: 0, homeScore: 0, quarter: 1, clock: 900, down: 1, distance: 10,
+        yardLine: 25, visitorOffIndex: 0, visitorDefIndex: 0, homeOffIndex: 0, homeDefIndex: 0,
+        column: 4, row: 1,
+        alignment: "Automatic", blueDie: 1
+      },
+      actualDice: {
+        offPlay: { red: 4, white: 1, blue: 1 },
+        passYards: { red: 1, white: 1 },
+        secRec: { red: 1, white: 1, blue: 1 },
+        scramble: { red: 1, white: 1, blue: 1 },
+        extra: { red: 1, white: 1, blue: 1 }
+      },
+      entries: [],
+      secondHalfOpener: "home",
+      overtime: false,
+      overtimeFirstScore: false,
+      timeouts: { home: 3, visitor: 3 },
+      possessionReset: false
+    };
+
+    const $ = (id) => document.getElementById(id);
+
+    function createRandomSeed() {
+      if (window.crypto && window.crypto.getRandomValues) {
+        const values = new Uint32Array(1);
+        window.crypto.getRandomValues(values);
+        return String(values[0]);
+      }
+      return `${Date.now()}-${Math.floor(Math.random() * 1000000000)}`;
+    }
+
+    const playMatrices = {
+      Short: [
+        ["SL", "SL", "SL", "SL", "IL", "QP"],
+        ["IL+", "SL", "SL", "IL", "IL", "SP"],
+        ["IL&", "IL", "IL", "IL", "IL", "SP"],
+        ["IR&", "IR", "IR", "IR", "IR", "SP"],
+        ["IR+", "SR", "SR", "IR", "IR", "MP"],
+        ["SR", "SR", "SR", "SR", "IR", "MP"]
+      ],
+      Run: [
+        ["SL", "SL", "SL", "SL", "QP", "QP"],
+        ["IL+", "SL", "SL", "IL", "SP", "SP"],
+        ["IL&", "IL", "IL", "IL", "SP", "SP"],
+        ["IR&", "IR", "IR", "IR", "MP", "MP"],
+        ["IR+", "SR", "SR", "IR", "MP", "MP"],
+        ["SR", "SR", "SR", "SR", "LP", "LP"]
+      ],
+      Starters: [
+        ["SL", "SL", "SL", "QP", "QP", "QP"],
+        ["IL+", "SL", "SL", "SP", "SP", "SP"],
+        ["IL&", "IL", "IL", "SP", "SP", "SP"],
+        ["IR&", "IR", "IR", "MP", "MP", "MP"],
+        ["IR+", "SR", "SR", "MP", "MP", "MP"],
+        ["SR", "SR", "SR", "LP", "LP", "LP"]
+      ],
+      Nickel: [
+        ["SL", "IL", "SP", "QP", "QP", "QP"],
+        ["IL", "IR", "SP", "SP", "SP", "SP"],
+        ["IL", "SP", "MP", "SP", "SP", "SP"],
+        ["IR", "MP", "MP", "MP", "MP", "MP"],
+        ["IR", "MP", "MP", "MP", "MP", "MP"],
+        ["SR", "LP", "LP", "LP", "LP", "LP"]
+      ],
+      Dime: [
+        ["IL", "SP", "SP", "QP", "QP", "QP"],
+        ["IR", "SP", "SP", "SP", "SP", "SP"],
+        ["SP", "MP", "MP", "SP", "SP", "SP"],
+        ["MP", "MP", "MP", "MP", "MP", "MP"],
+        ["MP", "MP", "MP", "MP", "MP", "MP"],
+        ["LP", "LP", "LP", "LP", "LP", "LP"]
+      ]
+    };
+
+    const tabletopInputKeys = {
+      boardVisitorScore: "visitorScore", boardHomeScore: "homeScore", boardQuarter: "quarter",
+      boardClock: "clock", boardDistance: "distance", boardYardLine: "yardLine",
+      boardVisitorOffIndex: "visitorOffIndex", boardVisitorDefIndex: "visitorDefIndex", boardHomeOffIndex: "homeOffIndex",
+      boardHomeDefIndex: "homeDefIndex", boardColumn: "column", boardRow: "row",
+      boardStrategy: "alignment", boardBlueDie: "blueDie",
+      boardVisitorScoreEdit: "visitorScore", boardHomeScoreEdit: "homeScore", boardQuarterSelect: "quarter", boardClockText: "clock"
+    };
+
+    const strategyRows = {
+      Short: ["Key", "Key", "Run", "Run", "No", "Man"],
+      Run: ["Key", "Run", "No", "Blitz", "Man", "Zone"],
+      Starters: ["Key", "Run", "No", "Blitz", "Man", "Zone"],
+      Nickel: ["No", "No", "Blitz", "Man", "Zone", "Pre"],
+      Dime: ["No", "Blitz", "Man", "Zone", "Pre", "Pre"]
+    };
+
+    let teamProfiles = {};
+    let facCards = [];
+    let facDrawPile = [];
+    let displayedFacCards = [];
+    let facDrawHistory = [];
+    let facHistoryIndex = -1;
+
+    function syncTeamSheetIndexes() {
+      const visitorIndexes = teamProfile(state.matchup.visitor).indexes || {};
+      const homeIndexes = teamProfile(state.matchup.home).indexes || {};
+      state.tabletop.visitorOffIndex = visitorIndexes.offense ?? 0;
+      state.tabletop.visitorDefIndex = visitorIndexes.defense ?? 0;
+      state.tabletop.homeOffIndex = homeIndexes.offense ?? 0;
+      state.tabletop.homeDefIndex = homeIndexes.defense ?? 0;
+    }
+
+    function matchupTeam(role) {
+      return teamProfiles[state.matchup[role]];
+    }
+
+    function teamProfile(teamOrRole) {
+      const teamId = teamOrRole === "home" || teamOrRole === "visitor"
+        ? state.matchup[teamOrRole]
+        : teamOrRole;
+      return teamProfiles[teamId] || {
+        id: "", abbreviation: teamOrRole === "home" ? "HOME" : "VIS",
+        name: teamOrRole === "home" ? "Home team" : "Visitors", season: "",
+        stats: {}, summary: "Load a season PDF to read team-card data."
+      };
+    }
+
+    function offenseTeam() {
+      return teamProfile(state.matchup[state.possession]);
+    }
+
+    function defenseTeam() {
+      return teamProfile(state.matchup[other(state.possession)]);
+    }
+
+    function suggestedAlignment() {
+      const board = state.tabletop;
+      if ((board.down >= 3 && board.distance === 1) || board.yardLine <= 2 || board.yardLine >= 98) return "Short";
+      const index = board.down * board.distance + matchupIndex(activeFieldTeam());
+      if (index >= 30) return "Dime";
+      if (index >= 20) return "Nickel";
+      if (index >= 10) return "Starters";
+      return "Run";
+    }
+
+    function renderDie(elementId, dieName, value) {
+      const facePips = {
+        1: [4], 2: [0, 8], 3: [0, 4, 8], 4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8]
+      };
+      const activePips = new Set(facePips[value]);
+      $(elementId).innerHTML = Array.from({ length: 9 }, (_, index) =>
+        `<span class="matrix-die-pip${activePips.has(index) ? " on" : ""}"></span>`
+      ).join("");
+      $(elementId).setAttribute("aria-label", `${dieName} die shows ${value}`);
+    }
+
+    function rollPlayCallDice() {
+      state.tabletop.column = roll(1, 6);
+      state.tabletop.row = roll(1, 6);
+      state.tabletop.blueDie = roll(1, 6);
+      render();
+    }
+
+    function renderActualDice() {
+      renderDie("actualOffRed", "Off Play red", state.actualDice.offPlay.red);
+      renderDie("actualOffWhite", "Off Play white", state.actualDice.offPlay.white);
+      renderDie("actualOffBlue", "Off Play blue", state.actualDice.offPlay.blue);
+      for (const [key, prefix, name] of [
+        ["passYards", "actualPass", "Pass yards"],
+        ["secRec", "actualSec", "Sec Rec"],
+        ["scramble", "actualScramble", "Scramble"],
+        ["extra", "actualExtra", "Extra"]
+      ]) {
+        const dice = state.actualDice[key];
+        renderDie(`${prefix}Red`, `${name} red`, dice.red);
+        renderDie(`${prefix}White`, `${name} white`, dice.white);
+        if (dice.blue != null) renderDie(`${prefix}Blue`, `${name} blue`, dice.blue);
+      }
+    }
+
+    function rollActualDice(key) {
+      const dice = state.actualDice[key];
+      dice.red = roll(1, 6);
+      dice.white = roll(1, 6);
+      if (dice.blue != null) dice.blue = roll(1, 6);
+      renderActualDice();
+    }
+
+    function rollAllActualDice() {
+      for (const key of Object.keys(state.actualDice)) {
+        const dice = state.actualDice[key];
+        dice.red = roll(1, 6);
+        dice.white = roll(1, 6);
+        if (dice.blue != null) dice.blue = roll(1, 6);
+      }
+      renderActualDice();
+    }
+
+    function renderTabletop() {
+      const board = state.tabletop;
+      const offense = activeFieldTeam();
+      const visitorProfile = teamProfile(state.matchup.visitor);
+      const homeProfile = teamProfile(state.matchup.home);
+      for (const [inputId, key] of Object.entries(tabletopInputKeys)) {
+        const value = inputId === "boardClockText" ? clockText(board[key]) : inputId === "boardYardLine" && board[key] > 50 ? 100 - board[key] : board[key];
+        $(inputId).value = value;
+      }
+      $("boardYardLineLabel").textContent = `${board.yardLine > 50 ? other(offense) : offense} yard line`;
+      $("boardYardLine").max = board.yardLine > 50 ? 49 : 50;
+      for (const button of document.querySelectorAll(".down-button")) {
+        button.setAttribute("aria-pressed", Number(button.dataset.down) === board.down);
+      }
+      $("boardColumnValue").textContent = board.column;
+      $("boardRowValue").textContent = board.row;
+      $("boardBlueDieValue").textContent = board.blueDie;
+      renderDie("redDieFace", "Red", board.column);
+      renderDie("whiteDieFace", "White", board.row);
+      renderDie("blueDieFace", "Blue", board.blueDie);
+      renderActualDice();
+      $("boardVisitorName").textContent = visitorProfile.name;
+      $("boardHomeName").textContent = homeProfile.name;
+      $("visitorOffLabel").textContent = `${visitorProfile.abbreviation} OFF index`;
+      $("visitorDefLabel").textContent = `${visitorProfile.abbreviation} DEF index`;
+      $("homeOffLabel").textContent = `${homeProfile.abbreviation} OFF index`;
+      $("homeDefLabel").textContent = `${homeProfile.abbreviation} DEF index`;
+      $("boardYardLineDisplay").textContent = formatFieldSpot(offense, board.yardLine);
+      const visitorMatchIndex = board.visitorOffIndex + board.homeDefIndex;
+      const homeMatchIndex = board.homeOffIndex + board.visitorDefIndex;
+      const visitorIndexLabel = visitorMatchIndex >= 0 ? `+${visitorMatchIndex}` : `${visitorMatchIndex}`;
+      const homeIndexLabel = homeMatchIndex >= 0 ? `+${homeMatchIndex}` : `${homeMatchIndex}`;
+      const activeRole = state.started ? state.possession : $("firstPossession").value;
+      const selectedIndex = activeRole === "home" ? homeMatchIndex : visitorMatchIndex;
+      const selectedIndexLabel = selectedIndex >= 0 ? `+${selectedIndex}` : `${selectedIndex}`;
+      $("boardCombinedIndex").textContent = `${visitorProfile.abbreviation} ${visitorIndexLabel} · ${homeProfile.abbreviation} ${homeIndexLabel}`;
+
+      const suggested = suggestedAlignment();
+      $("boardStrategy").options[0].textContent = `Suggested from OFF index (${suggested})`;
+      for (const range of document.querySelectorAll(".alignment-range")) {
+        range.classList.toggle("active", range.dataset.alignment === suggested);
+      }
+      const alignment = board.alignment === "Automatic" ? suggested : board.alignment;
+      const matrix = playMatrices[alignment];
+      const strategies = strategyRows[alignment];
+      $("boardMatrixTitle").textContent = `${alignment} play-call matrix · ${board.down} × ${board.distance} ${selectedIndexLabel}`;
+      $("boardAlignmentNote").textContent = `${alignment === suggested ? "Suggested" : "Selected"} alignment: ${alignment}. ${teamName(offense)} formula: down × yards-to-go + offense OFF + opposing DEF = ${selectedIndexLabel}. Matchup indices: ${visitorProfile.abbreviation} ${visitorIndexLabel} · ${homeProfile.abbreviation} ${homeIndexLabel}.`;
+      $("boardStrategyValue").textContent = strategies[board.blueDie - 1];
+      $("boardDiceText").textContent = `${board.column}-${board.row}-${board.blueDie}`;
+      $("boardPlayCall").textContent = matrix[board.row - 1][board.column - 1];
+      $("boardMatrix").innerHTML = `<thead><tr><th>Row / Col</th>${[1, 2, 3, 4, 5, 6].map((column) => `<th>${column}</th>`).join("")}</tr></thead><tbody>${matrix.map((row, rowIndex) => `<tr><th>${rowIndex + 1}</th>${row.map((call, columnIndex) => `<td class="${rowIndex + 1 === board.row && columnIndex + 1 === board.column ? "selected" : ""}">${call}</td>`).join("")}</tr>`).join("")}</tbody><tfoot><tr><th>Blue strategy</th>${strategies.map((strategy, index) => `<td class="${index + 1 === board.blueDie ? "selected" : ""}">${strategy}</td>`).join("")}</tr></tfoot>`;
+    }
+
+    function syncTabletopFromGame() {
+      Object.assign(state.tabletop, {
+        visitorScore: state.score.visitor,
+        homeScore: state.score.home,
+        quarter: state.quarter,
+        clock: state.clock,
+        yardLine: state.ball
+      });
+      renderTabletop();
+    }
+
+    function updateTabletopInput(event) {
+      const inputId = event.currentTarget.id;
+      const key = tabletopInputKeys[inputId];
+      let value = event.currentTarget.type === "number" || event.currentTarget.type === "range" || inputId === "boardQuarterSelect" ? Number(event.currentTarget.value) : event.currentTarget.value;
+      if (inputId === "boardClockText") {
+        const match = String(value).match(/^(\d{1,2}):(\d{2})$/);
+        if (!match || Number(match[2]) > 59) return;
+        value = clamp(Number(match[1]) * 60 + Number(match[2]), 0, 900);
+      }
+      if (inputId === "boardYardLine") {
+        value = clamp(value, 1, 50);
+        if (state.tabletop.yardLine > 50) value = 100 - value;
+      }
+      if (key === "visitorScore" || key === "homeScore") value = clamp(value, 0, 99);
+      state.tabletop[key] = value;
+      if (inputId === "boardYardLine" && (!state.started || !state.gameOver)) state.ball = clamp(value, 1, 99);
+      render();
+    }
+
+    function adjustTabletopClock(seconds) {
+      state.tabletop.clock = clamp(state.tabletop.clock + seconds, 0, 900);
+      render();
+    }
+
+    function setFieldPosition(ownYards) {
+      if (state.gameOver) return;
+      state.ball = clamp(Math.round(ownYards), 1, 99);
+      if (!state.started || !state.gameOver) state.tabletop.yardLine = state.ball;
+      render();
+    }
+
+    function updateFieldFromPointer(event) {
+      const track = $("fieldTrack");
+      const rect = track.getBoundingClientRect();
+      if (!rect.width) return;
+      const ratio = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+      setFieldPosition(activeFieldTeam() === state.matchup.home ? (1 - ratio) * 100 : ratio * 100);
+    }
+
+    function makeRandom(seedText) {
+      let seed = 2166136261;
+      for (const character of String(seedText)) {
+        seed ^= character.charCodeAt(0);
+        seed = Math.imul(seed, 16777619);
+      }
+      return function () {
+        seed += 0x6D2B79F5;
+        let value = seed;
+        value = Math.imul(value ^ (value >>> 15), value | 1);
+        value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
+        return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+
+    function roll(min, max) { return Math.floor(state.random() * (max - min + 1)) + min; }
+    function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+    function other(team) {
+      const role = team === "home" || team === "visitor" ? team : team === state.matchup.home ? "home" : "visitor";
+      const oppositeRole = role === "home" ? "visitor" : "home";
+      return team === role ? oppositeRole : state.matchup[oppositeRole];
+    }
+    function formatFieldSpot(team, ownYards) {
+      const yards = clamp(Math.round(ownYards), 1, 99);
+      const profile = teamProfile(team);
+      return yards <= 50 ? `${profile?.abbreviation || team} ${yards}` : `${teamProfile(other(team))?.abbreviation || other(team)} ${100 - yards}`;
+    }
+    function nextTeamStartingSpot(nextRole = other(state.possession)) {
+      const yardLine = clamp(Number($("nextStartYard").value) || 25, 1, 50);
+      return $("nextStartSide").value === nextRole ? yardLine : 100 - yardLine;
+    }
+    function activeFieldTeam() {
+      const role = state.started ? state.possession : $("firstPossession").value;
+      return state.matchup[role];
+    }
+    function matchupIndex(team) {
+      const homeOffense = team === state.matchup.home;
+      const offenseIndex = homeOffense ? state.tabletop.homeOffIndex : state.tabletop.visitorOffIndex;
+      const defenseIndex = homeOffense ? state.tabletop.visitorDefIndex : state.tabletop.homeDefIndex;
+      return offenseIndex + defenseIndex;
+    }
+    function teamName(team) { return teamProfile(team)?.name || team; }
+    function ordinal(value) {
+      if (value === 1) return "1st";
+      if (value === 2) return "2nd";
+      if (value === 3) return "3rd";
+      return `${value}th`;
+    }
+    function clockText(seconds) {
+      const safe = Math.max(0, seconds);
+      return `${String(Math.floor(safe / 60)).padStart(2, "0")}:${String(safe % 60).padStart(2, "0")}`;
+    }
+    function periodText() { return state.overtime ? "Overtime" : `${ordinal(state.quarter)} quarter`; }
+    function logEvent(message) {
+      state.entries.unshift({ team: "NOTE", title: message, detail: "", points: "", plays: [] });
+    }
+    function notify(message) {
+      const toast = $("toast");
+      toast.textContent = message;
+      toast.classList.add("show");
+      window.clearTimeout(notify.timer);
+      notify.timer = window.setTimeout(() => toast.classList.remove("show"), 2400);
+    }
+
+    function render() {
+      const tabletopActive = !state.started || !state.gameOver;
+      const visitorProfile = teamProfile(state.matchup.visitor);
+      const homeProfile = teamProfile(state.matchup.home);
+      const currentRole = state.started ? state.possession : $("firstPossession").value;
+      const nextRole = other(currentRole);
+      $("homeScore").textContent = tabletopActive ? state.tabletop.homeScore : state.score.home;
+      $("visitorScore").textContent = tabletopActive ? state.tabletop.visitorScore : state.score.visitor;
+      $("homeName").textContent = homeProfile.name;
+      $("visitorName").textContent = visitorProfile.name;
+      document.title = `Inside Blitz Drive Desk | ${visitorProfile.name} at ${homeProfile.name}`;
+      $("seasonLabel").textContent = !homeProfile.season && !visitorProfile.season ? "Season" : homeProfile.season === visitorProfile.season ? `${homeProfile.season} season` : `${visitorProfile.season} / ${homeProfile.season}`;
+      $("homeMark").textContent = homeProfile.abbreviation;
+      $("visitorMark").textContent = visitorProfile.abbreviation;
+      $("matchupTitle").textContent = `${visitorProfile.name} at ${homeProfile.name}`;
+      $("boardHomeName").textContent = homeProfile.name;
+      $("boardVisitorName").textContent = visitorProfile.name;
+      $("homeProfileTitle").textContent = `${homeProfile.name} profile`;
+      $("homeProfileSeason").textContent = homeProfile.season ? `${homeProfile.season} team card` : "Not loaded";
+      $("homeRecord").textContent = homeProfile.stats.record || "-";
+      $("homePointsFor").textContent = homeProfile.stats.pointsFor ?? "-";
+      $("homePassLine").textContent = homeProfile.stats.passAttempts != null && homeProfile.stats.completions != null ? `${homeProfile.stats.passAttempts} / ${homeProfile.stats.completions}` : "-";
+      $("homePassYards").textContent = homeProfile.stats.passYards != null ? Number(homeProfile.stats.passYards).toLocaleString() : "-";
+      $("homeProfileNote").textContent = homeProfile.summary;
+      $("startButton").disabled = !teamProfiles[state.matchup.home]?.capabilities?.complete || !teamProfiles[state.matchup.visitor]?.capabilities?.complete || state.matchup.home === state.matchup.visitor;
+      $("firstPossession").options[0].textContent = `${visitorProfile.name} (Visitors)`;
+      $("firstPossession").options[1].textContent = `${homeProfile.name} (Home)`;
+      $("firstPossessionLabel").textContent = state.startMode === "in-progress" ? "Team with the ball" : "Opening possession";
+      $("startModeNote").textContent = state.startMode === "in-progress"
+        ? "Starts from the score, quarter, clock, possession, field position, down, and distance entered on the board. The ledger begins here."
+        : "Starts 0-0 at 15:00 with the opening team at its own 25.";
+      for (const button of document.querySelectorAll(".start-mode-button")) {
+        button.setAttribute("aria-pressed", button.dataset.startMode === state.startMode);
+      }
+      $("nextStartSide").options[0].textContent = `${homeProfile.name} territory`;
+      $("nextStartSide").options[1].textContent = `${visitorProfile.name} territory`;
+      $("clock").textContent = clockText(tabletopActive ? state.tabletop.clock : state.clock);
+      $("period").textContent = tabletopActive ? `${ordinal(state.tabletop.quarter)} quarter` : periodText();
+      $("seedTag").textContent = `Seed: ${state.seed}`;
+      $("possessionText").textContent = state.gameOver
+        ? "Final score"
+        : state.started ? `${teamName(state.matchup[state.possession])} possession` : "Set the opening possession to begin.";
+      const fieldTeam = activeFieldTeam();
+      const fieldYards = state.started ? state.ball : 25;
+      const visibleYards = fieldYards <= 50 ? fieldYards : 100 - fieldYards;
+      const fieldSpot = formatFieldSpot(fieldTeam, fieldYards);
+      $("ballTag").textContent = `Ball: ${fieldSpot}`;
+      $("ballMarker").textContent = visibleYards;
+      const trackPosition = fieldTeam === state.matchup.home ? 100 - fieldYards : fieldYards;
+      $("ballMarker").style.left = `${clamp(trackPosition, 2, 98)}%`;
+      const gainLineYards = clamp(fieldYards + state.tabletop.distance, 1, 99);
+      const gainLinePosition = fieldTeam === state.matchup.home ? 100 - gainLineYards : gainLineYards;
+      $("lineToGain").style.left = `${clamp(gainLinePosition, 2, 98)}%`;
+      $("ballMarker").setAttribute("aria-valuenow", fieldYards);
+      $("ballMarker").setAttribute("aria-valuetext", fieldSpot);
+      $("fieldPositionCaption").textContent = `${fieldSpot} · drag marker or use arrow keys`;
+      $("visitorGoalName").textContent = `${visitorProfile.name} goal`;
+      $("homeGoalName").textContent = `${homeProfile.name} goal`;
+      $("visitorDirection").textContent = `${visitorProfile.name} attacks right`;
+      $("homeDirection").textContent = `${homeProfile.name} attacks left`;
+      $("drivePlayStyleLabel").textContent = `${teamName(state.matchup[currentRole])} play mix`;
+      $("drivePrompt").textContent = `Simulate a drive for ${teamName(state.matchup[currentRole])}.`;
+      $("recordPrompt").textContent = `Record ${teamName(state.matchup[currentRole])}'s drive and switch possession.`;
+      $("recordButton").textContent = "Record & Switch";
+      $("switchPossessionButton").textContent = `Switch possession to ${teamName(state.matchup[nextRole])}`;
+      $("downTag").textContent = state.gameOver ? "Final" : state.started ? `${teamName(state.matchup[state.possession])} ball` : "Ready";
+      $("setupPanel").hidden = state.started;
+      $("pregamePrompt").hidden = state.started;
+      $("driveControls").hidden = !state.started || state.gameOver;
+      $("recordControls").hidden = !state.started || state.gameOver;
+      $("gameOverPrompt").hidden = !state.gameOver;
+      renderTabletop();
+      if (state.gameOver) {
+        const result = state.score.home === state.score.visitor ? "The game ends tied." : `${teamName(state.score.home > state.score.visitor ? state.matchup.home : state.matchup.visitor)} wins.`;
+        $("finalText").textContent = `${result} Final: ${homeProfile.name} ${state.score.home}, ${visitorProfile.name} ${state.score.visitor}.`;
+      }
+      renderLog();
+    }
+
+    function renderLog() {
+      const container = $("driveLog");
+      if (!state.entries.length) {
+        container.innerHTML = `<div class="empty-log">${escapeHtml(teamName(state.matchup.home))} drive summaries and play rolls will appear here.</div>`;
+        return;
+      }
+      container.innerHTML = state.entries.map((entry) => {
+        if (entry.team === "NOTE") return `<div class="log-entry"><div class="log-summary"><div class="drive-index">INFO</div><div><div class="log-title">${escapeHtml(entry.title)}</div><div class="log-sub">${escapeHtml(entry.detail)}</div></div><span></span></div></div>`;
+        const points = entry.points ? `+${entry.points}` : "0";
+        const plays = entry.plays.length
+          ? `<details><summary>Show ${entry.plays.length} ${escapeHtml(teamName(state.matchup[entry.team]))} plays and rolls</summary><div class="play-list">${entry.plays.map((play) => `<div class="play-row ${play.kind === "decision" ? "decision-row" : play.kind === "kick" ? "kick-row" : ""}"><span>${escapeHtml(play.down)}</span><span>${escapeHtml(play.text)}</span><span>${escapeHtml(play.result)}</span></div>`).join("")}</div></details>`
+          : "";
+        const profile = teamProfile(state.matchup[entry.team]);
+        return `<div class="log-entry ${entry.team}"><div class="log-summary"><div class="drive-index">${escapeHtml(profile.abbreviation)}</div><div><div class="log-title">${escapeHtml(profile.name)} Drive ${entry.driveNumber}: ${escapeHtml(entry.title)}</div><div class="log-sub">${escapeHtml(entry.detail)}</div></div><div class="log-points">${points}</div></div>${plays}</div>`;
+      }).join("");
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (character) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]);
+    }
+
+    async function loadFacDeck() {
+      if (facCards.length) return;
+      $("facDeckStatus").textContent = "Loading numbered FACs...";
+      try {
+        const response = await fetch("/api/fac-deck");
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Could not load the FAC deck.");
+        facCards = payload.cards;
+        facDrawPile = shuffleFacCards(facCards);
+        $("facDeckStatus").textContent = `${facCards.length} FACs ready.`;
+      } catch (error) {
+        $("facDeckStatus").textContent = location.protocol === "file:"
+          ? "Open the local server page to load FACs."
+          : error instanceof Error ? error.message : "Could not load the FAC deck.";
+      }
+    }
+
+    function shuffleFacCards(cards) {
+      const shuffled = [...cards];
+      for (let index = shuffled.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+      }
+      return shuffled;
+    }
+
+    function renderFacCards() {
+      const cardsToShow = facHistoryIndex < facDrawHistory.length - 1
+        ? facHistoryIndex >= 0 ? [facDrawHistory[facHistoryIndex]] : []
+        : displayedFacCards;
+      $("facCards").innerHTML = cardsToShow.map((card) =>
+        `<article class="fac-card"><h4>FAC ${card.number}</h4><pre>${escapeHtml(card.content)}</pre></article>`
+      ).join("");
+      $("previousFacButton").disabled = facHistoryIndex <= 0;
+      $("nextFacButton").disabled = facHistoryIndex < 0 || facHistoryIndex >= facDrawHistory.length - 1;
+    }
+
+    async function drawFac(addToDisplay) {
+      await loadFacDeck();
+      if (!facCards.length) return;
+      if (!facDrawPile.length) {
+        $("facDeckStatus").textContent = "No FACs remain. Reshuffle the deck to draw again.";
+        return;
+      }
+      const wasAtLatest = facHistoryIndex === facDrawHistory.length - 1;
+      const card = facDrawPile.pop();
+      displayedFacCards = addToDisplay && wasAtLatest ? [...displayedFacCards, card] : [card];
+      facDrawHistory.push(card);
+      facHistoryIndex = facDrawHistory.length - 1;
+      renderFacCards();
+      $("facDeckStatus").textContent = `${facDrawPile.length} FACs remaining.`;
+    }
+
+    function showFacHistory(offset) {
+      if (!facDrawHistory.length) return;
+      facHistoryIndex = clamp(facHistoryIndex + offset, 0, facDrawHistory.length - 1);
+      renderFacCards();
+      $("facDeckStatus").textContent = facHistoryIndex === facDrawHistory.length - 1
+        ? `${facDrawPile.length} FACs remaining.`
+        : `Showing previous FAC ${facHistoryIndex + 1} of ${facDrawHistory.length} drawn.`;
+    }
+
+    async function reshuffleFacDeck() {
+      await loadFacDeck();
+      if (!facCards.length) return;
+      facDrawPile = shuffleFacCards(facCards);
+      displayedFacCards = [];
+      facDrawHistory = [];
+      facHistoryIndex = -1;
+      renderFacCards();
+      $("facDeckStatus").textContent = `Deck reshuffled: ${facDrawPile.length} FACs available.`;
+    }
+
+    function startGame() {
+      if (!teamProfiles[state.matchup.home]?.capabilities?.complete || !teamProfiles[state.matchup.visitor]?.capabilities?.complete || state.matchup.home === state.matchup.visitor) {
+        notify("Load a season PDF and select two complete, different team profiles first.");
+        return;
+      }
+      const first = $("firstPossession").value;
+      const startingInProgress = state.startMode === "in-progress";
+      const seed = $("seedInput").value.trim() || createRandomSeed();
+      state.started = true;
+      state.gameOver = false;
+      state.possession = first;
+      if (startingInProgress) {
+        state.quarter = clamp(state.tabletop.quarter, 1, 4);
+        state.clock = clamp(state.tabletop.clock, 0, 900);
+        state.ball = clamp(state.tabletop.yardLine, 1, 99);
+        state.score = {
+          home: clamp(state.tabletop.homeScore, 0, 99),
+          visitor: clamp(state.tabletop.visitorScore, 0, 99)
+        };
+        state.elapsedGameSeconds = (state.quarter - 1) * 900 + (900 - state.clock);
+      } else {
+        state.quarter = 1;
+        state.clock = 900;
+        state.ball = 25;
+        state.score = { home: 0, visitor: 0 };
+        state.tabletop.down = 1;
+        state.tabletop.distance = 10;
+        state.tabletop.yardLine = 25;
+        state.tabletop.alignment = "Automatic";
+        state.tabletop.column = 4;
+        state.tabletop.row = 1;
+        state.tabletop.blueDie = 1;
+        state.elapsedGameSeconds = 0;
+      }
+      $("nextStartSide").value = other(first);
+      state.driveNumber = 0;
+      state.driveNumbers = { home: 0, visitor: 0 };
+      state.seed = seed;
+      state.random = makeRandom(seed);
+      state.currentFac = roll(1, 82);
+      state.entries = [];
+      state.secondHalfOpener = other(first);
+      state.overtime = false;
+      state.overtimeFirstScore = false;
+      state.timeouts = { home: 3, visitor: 3 };
+      logEvent(startingInProgress
+        ? `Game in progress: ${teamName(first)} has the ball at ${formatFieldSpot(first, state.ball)}. Seeded rolls: ${seed}.`
+        : `${teamName(first)} opens at its own 25. Seeded rolls: ${seed}.`);
+      syncTabletopFromGame();
+      render();
+    }
+
+    function openStartConfirmation() {
+      if (!teamProfiles[state.matchup.home]?.capabilities?.complete || !teamProfiles[state.matchup.visitor]?.capabilities?.complete || state.matchup.home === state.matchup.visitor) {
+        notify("Load a season PDF and select two complete, different team profiles first.");
+        return;
+      }
+      if (state.startMode === "in-progress") {
+        const role = $("firstPossession").value;
+        const board = state.tabletop;
+        $("startConfirmTitle").textContent = "Start from this game state?";
+        $("startConfirmMessage").textContent = `Confirm the snapshot: ${teamName(state.matchup.home)} ${board.homeScore}, ${teamName(state.matchup.visitor)} ${board.visitorScore}; ${ordinal(board.quarter)} quarter, ${clockText(board.clock)}; ${teamName(state.matchup[role])} ball at ${formatFieldSpot(role, board.yardLine)}, ${ordinal(board.down)} & ${board.distance}. The ledger starts here; earlier drives are not imported.`;
+        $("confirmStartButton").textContent = "Start from this state";
+      } else {
+        $("startConfirmTitle").textContent = "Start a new game?";
+        $("startConfirmMessage").textContent = "This abandons the current game, clears its score and ledger, and starts from 0-0 at 15:00 with the opening team at its own 25.";
+        $("confirmStartButton").textContent = "Start over";
+      }
+      $("startConfirmDialog").showModal();
+      $("cancelStartButton").focus();
+    }
+
+    function isPeriodEnd() {
+      return state.overtime || state.quarter === 2 || state.quarter === 4;
+    }
+
+    function periodSecondsLeft() {
+      if (state.overtime) return state.clock;
+      return (state.quarter <= 2 ? 2 - state.quarter : 4 - state.quarter) * 900 + state.clock;
+    }
+
+    // Half, game, or overtime ends: only called once the clock is 0 in Q2, Q4, or OT.
+    function endPeriod() {
+      if (state.overtime) {
+        state.gameOver = true;
+      } else if (state.quarter === 2) {
+        state.quarter = 3;
+        state.clock = 900;
+        state.timeouts = { home: 3, visitor: 3 };
+        state.possession = state.secondHalfOpener;
+        state.possessionReset = true;
+        $("nextStartSide").value = other(state.possession);
+        state.ball = 25;
+        logEvent(`Halftime. ${teamName(state.possession)} opens the second half at its own 25.`);
+      } else if (state.score.home === state.score.visitor) {
+        state.overtime = true;
+        state.clock = 900;
+        state.timeouts = { home: 2, visitor: 2 };
+        state.possession = state.random() < 0.5 ? "home" : "visitor";
+        state.possessionReset = true;
+        $("nextStartSide").value = other(state.possession);
+        state.ball = 25;
+        state.overtimeFirstScore = false;
+        logEvent(`Regulation tied. Overtime coin toss: ${teamName(state.possession)} receives at its own 25.`);
+      } else {
+        state.gameOver = true;
+      }
+    }
+
+    // With defer, a half/game-ending clock stops at 0:00 so the play's points count before the period ends.
+    function advanceClock(seconds, defer = false) {
+      let remaining = Math.max(0, seconds);
+      while (remaining > 0 && !state.gameOver) {
+        if (remaining < state.clock) {
+          state.clock -= remaining;
+          state.elapsedGameSeconds += remaining;
+          break;
+        }
+        remaining -= state.clock;
+        state.elapsedGameSeconds += state.clock;
+        state.clock = 0;
+        if (isPeriodEnd()) {
+          if (!defer) endPeriod();
+          break;
+        }
+        state.quarter += 1;
+        state.clock = 900;
+      }
+    }
+
+    function settlePeriodEnd() {
+      if (state.clock === 0 && isPeriodEnd() && !state.gameOver) endPeriod();
+    }
+
+    function addPoints(team, points) {
+      if (points <= 0) return;
+      state.score[team] += points;
+      if (state.overtime) {
+        state.overtimeFirstScore = true;
+        state.gameOver = true;
+      }
+    }
+
+    function alignmentForPlay(down, distance, position, combinedIndex) {
+      if ((down >= 3 && distance === 1) || position <= 2 || position >= 98) return "Short";
+      const index = down * distance + combinedIndex;
+      if (index >= 30) return "Dime";
+      if (index >= 20) return "Nickel";
+      if (index >= 10) return "Starters";
+      return "Run";
+    }
+
+    function dicePair() {
+      const red = roll(1, 6);
+      const white = roll(1, 6);
+      return { red, white, total: red + white, code: red * 10 + white };
+    }
+
+    function chooseCall(down, distance, position, style) {
+      const dice = { red: roll(1, 6), white: roll(1, 6), blue: roll(1, 6) };
+      const combinedIndex = matchupIndex(activeFieldTeam());
+      const alignment = alignmentForPlay(down, distance, position, combinedIndex);
+      const matrix = playMatrices[alignment];
+      let row = dice.white - 1;
+      let column = dice.red - 1;
+      let call = matrix[row][column];
+      let biased = false;
+      const wantsRun = style === "run";
+      if ((wantsRun && !/^(SL|SR|IL|IR)/.test(call)) || (style === "pass" && /^(SL|SR|IL|IR)/.test(call))) {
+        const candidates = [];
+        matrix.forEach((matrixRow, rowIndex) => matrixRow.forEach((candidate, columnIndex) => {
+          if (wantsRun ? /^(SL|SR|IL|IR)/.test(candidate) : !/^(SL|SR|IL|IR)/.test(candidate)) candidates.push({ row: rowIndex, column: columnIndex, call: candidate });
+        }));
+        if (candidates.length) {
+          const selected = candidates[roll(0, candidates.length - 1)];
+          row = selected.row;
+          column = selected.column;
+          call = selected.call;
+          biased = true;
+        }
+      }
+      const callType = /^(SL|SR|IL|IR)/.test(call) ? "run" : "pass";
+      const depth = { QP: "Quick", SP: "Short", MP: "Medium", LP: "Long" }[call.slice(0, 2)];
+      return {
+        call, type: callType, depth, alignment, strategy: strategyRows[alignment][dice.blue - 1],
+        red: dice.red, white: dice.white, blue: dice.blue, row: row + 1, column: column + 1, biased
+      };
+    }
+
+    function defenderPool(call, depth) {
+      const defenders = defenseTeam().defense.players;
+      if (call.type === "run") {
+        if (call.call.startsWith("IL") || call.call.startsWith("IR")) return defenders.filter((player) => player.group === "front" || player.group === "linebacker");
+        return defenders.filter((player) => player.group !== "front");
+      }
+      if (depth === "Quick" || depth === "Short") return defenders.filter((player) => player.group !== "front");
+      return defenders.filter((player) => player.group === "secondary");
+    }
+
+    function getKeyDefender(call, depth, fac) {
+      const pool = defenderPool(call, depth);
+      return pool[fac % pool.length];
+    }
+
+    function defensiveAdjustments(strategy, call, depth, diceTotal) {
+      if (call.type === "run") {
+        if (strategy === "Key") return { rating: 2, catch: 0, passRush: 0 };
+        if (strategy === "Run") return { rating: 1, catch: 0, passRush: 0 };
+        if (strategy === "Blitz") return { rating: diceTotal % 2 ? -1 : -2, catch: 0, passRush: 0 };
+        return { rating: 0, catch: 0, passRush: 0 };
+      }
+      if (strategy === "Man" && ["Quick", "Short"].includes(depth)) return { rating: 1, catch: -1, passRush: 0 };
+      if (strategy === "Zone" && ["Medium", "Long"].includes(depth)) return { rating: 1, catch: -1, passRush: 0 };
+      if (strategy === "Prevent" && depth === "Long") return { rating: 2, catch: -2, passRush: 0 };
+      if (strategy === "Blitz") return { rating: -1, catch: 1, passRush: diceTotal % 2 ? 1 : 2 };
+      return { rating: 0, catch: 0, passRush: 0 };
+    }
+
+    function getRunCard(fac) {
+      const runCards = offenseTeam().offense.runCards;
+      return runCards.find((card) => fac >= card.start && fac <= card.end) || runCards[0];
+    }
+
+    function resolveRunCell(value, card, defender, call, playDice) {
+      const [highText, lowText = highText] = value.split("/");
+      const adjustments = defensiveAdjustments(call.strategy, call, null, call.red + call.white);
+      const ratingRoll = roll(1, 6);
+      const stopped = ratingRoll <= clamp(defender.rd + adjustments.rating, 0, 6);
+      const chosen = stopped ? lowText : highText;
+      let yards;
+      if (chosen === "S") {
+        const shortRoll = dicePair();
+        const shortTable = [0, 0, 3, 5, 7, 9, 12, 14, 17, 19, 22, 24, 26];
+        yards = shortTable[shortRoll.total];
+      } else if (chosen === "B") {
+        const breakawayRoll = dicePair();
+        yards = Math.max(1, card.long * (breakawayRoll.total - 1));
+      } else {
+        yards = Number(chosen);
+      }
+      return { yards, ratingRoll, defender, stopped, chosen, detail: `FAC ${playDice.fac} · ${call.call} (${value}) · ${defender.name} RD ${defender.rd}, check ${ratingRoll}` };
+    }
+
+    function chooseReceiver(depth, fac) {
+      const eligible = offenseTeam().offense.receivers.filter((receiver) => receiver.ranges[depth]);
+      return eligible.find((receiver) => fac >= receiver.ranges[depth][0] && fac <= receiver.ranges[depth][1]) || eligible[fac % eligible.length];
+    }
+
+    function receiverYards(receiver, depth) {
+      const average = receiver.average[depth];
+      const spread = [-8, -5, -2, 0, 2, 5, 8][roll(0, 6)];
+      return Math.max(0, Math.round(average + spread));
+    }
+
+    function passOutcome(depth, red, white) {
+      const matrix = offenseTeam().offense.quarterback[depth.toLowerCase()];
+      return matrix[white - 1][red - 1];
+    }
+
+    function resolveFumble(fumbleRating, position) {
+      const adjustedRate = clamp(fumbleRating - 1, 0, 6);
+      if (roll(1, 6) > adjustedRate) return null;
+      const check = dicePair().code;
+      const lost = (check >= 11 && check <= 23) || (check >= 41 && check <= 46);
+      if (!lost) return { lost: false, check };
+      return { lost: true, check, returnYards: roll(0, 15), nextSpot: turnoverNextSpot(position) };
+    }
+
+    function playClockSeconds(kind) {
+      if (kind === "run" || kind === "complete") return 40;
+      if (kind === "field-goal" || kind === "extra-point") return 0;
+      return 10;
+    }
+
+    function getPassDepthFromCode(code) {
+      if (code <= 21) return "Quick";
+      if (code <= 32) return "Short";
+      if (code <= 51) return "Medium";
+      return "Long";
+    }
+
+    function interceptionSpot(position, depth) {
+      if (depth === "Quick") return clamp(position - roll(1, 6), 1, 99);
+      const dice = dicePair();
+      if (depth === "Short") return clamp(position + dice.total - 2, 1, 99);
+      if (depth === "Medium") return clamp(position + dice.total + 8, 1, 99);
+      return clamp(position + dice.red * dice.white + 20, 1, 99);
+    }
+
+    function resolvePassPlay(call, fac, position) {
+      const receiver = chooseReceiver(call.depth, fac);
+      const coverageCall = { ...call, type: "pass" };
+      const keyDefender = getKeyDefender(coverageCall, call.depth, fac);
+      const adjustments = defensiveAdjustments(call.strategy, coverageCall, call.depth, call.red + call.white);
+      const outcome = passOutcome(call.depth, call.red, call.white);
+      const quarterback = offenseTeam().offense.quarterback;
+      const pass = { receiver, keyDefender, outcome, yards: 0, kind: "incomplete", text: `${call.depth} pass · ${quarterback.name} to ${receiver.name}` };
+
+      if (outcome === "X") {
+        const ratingRoll = roll(1, 6);
+        const defenseRating = clamp(keyDefender[call.depth.toLowerCase()[0]] + adjustments.rating, 0, 6);
+        pass.text += ` · FAC ${fac}, ${keyDefender.name} ${defenseRating} vs ${ratingRoll}`;
+        if (ratingRoll <= defenseRating) {
+          pass.result = "Broken up";
+          return pass;
+        }
+        pass.kind = "complete";
+      } else if (outcome === "R") {
+        const catchRoll = roll(1, 6);
+        const catchRating = clamp(receiver.catches[call.depth] + adjustments.catch, 0, 6);
+        pass.text += ` · ${receiver.name} catch ${catchRating} vs ${catchRoll}`;
+        if (catchRoll > catchRating) {
+          pass.result = "Dropped";
+          return pass;
+        }
+        pass.kind = "complete";
+      } else if (outcome === "?") {
+        const intRoll = roll(1, 6);
+        pass.text += ` · ${keyDefender.name} INT ${keyDefender.int} vs ${intRoll}`;
+        if (intRoll <= keyDefender.int) {
+          pass.kind = "interception";
+          pass.spot = interceptionSpot(position, call.depth);
+          pass.result = `Intercepted at ${formatFieldSpot(state.possession, pass.spot)}`;
+          return pass;
+        }
+        pass.result = "Interception check failed; incomplete";
+        return pass;
+      } else if (outcome === "PR") {
+        const rusher = getKeyDefender({ ...call, type: "run", call: "IL" }, call.depth, fac);
+        const rushRoll = roll(1, 6);
+        const rushRating = clamp(rusher.pr + adjustments.passRush, 0, 6);
+        pass.text = `${call.depth} pass · ${quarterback.name} · PR ${rusher.name} ${rushRating} vs ${rushRoll}`;
+        if (rushRoll <= rushRating) {
+          const pressureDice = dicePair();
+          if (pressureDice.code <= 54) {
+            let lost = roll(1, 6) + roll(1, 6);
+            if (call.depth === "Quick" || call.depth === "Short") lost = Math.max(1, lost - 1);
+            if (call.depth === "Long") lost += 2;
+            pass.kind = "sack";
+            pass.yards = -lost;
+            pass.result = `Sacked, -${lost} yd`;
+            return pass;
+          }
+          pass.kind = "scramble";
+          pass.result = `${quarterback.name} scramble`;
+          pass.yards = roll(-1, 9);
+          return pass;
+        }
+        const secondaryDepth = getPassDepthFromCode(dicePair().code);
+        const secondary = chooseReceiver(secondaryDepth, fac);
+        const catchRoll = roll(1, 6);
+        const catchRating = secondary.catches[secondaryDepth] || 0;
+        pass.text = `${call.depth} PR fails · secondary ${secondaryDepth} to ${secondary.name} · catch ${catchRating} vs ${catchRoll}`;
+        if (catchRoll > catchRating) {
+          pass.result = "Incomplete";
+          return pass;
+        }
+        pass.receiver = secondary;
+        pass.kind = "complete";
+      } else if (outcome === "SC") {
+        pass.kind = "scramble";
+        pass.result = `${quarterback.name} scramble`;
+        pass.yards = roll(-1, 9);
+        return pass;
+      } else {
+        pass.result = "Poor pass, incomplete";
+        return pass;
+      }
+
+      pass.yards = receiverYards(pass.receiver, call.depth);
+      pass.result = `Complete, +${pass.yards} yd`;
+      return pass;
+    }
+
+    function touchdown(team, player, play) {
+      play.result = `${Math.max(0, 100 - (play.before ?? state.ball))} yd TD`;
+      play.kind = "score";
+      play.scorer = player;
+      addPoints(team, 7);
+    }
+
+    function attemptFieldGoal(position) {
+      const distance = 100 - position + 17;
+      const kicker = offenseTeam().specialTeams.kicker;
+      const fieldGoalTable = kicker.fieldGoalTable;
+      const dice = dicePair();
+      const blue = roll(1, 6);
+      const range = fieldGoalTable[dice.white - 1][dice.red - 1];
+      const blocked = dice.red === dice.white && dice.white === blue;
+      const made = !blocked && distance <= range;
+      return { made, distance, range, red: dice.red, white: dice.white, blue, blocked, kicker: kicker.name };
+    }
+
+    function puntNextSpot(position) {
+      const punter = offenseTeam().specialTeams.punter;
+      const puntReturners = defenseTeam().specialTeams.puntReturners;
+      const outsideFifty = punter.outsideFifty;
+      const insideFifty = punter.insideFifty;
+      const red = roll(1, 6);
+      const white = roll(1, 6);
+      const blue = roll(1, 6);
+      const outside = position < 50;
+      const cell = (outside ? outsideFifty : insideFifty)[white - 1][red - 1];
+      const match = cell.match(/^(\d+)([?n/])?\+?\*?(?:\/?(\d))?$/);
+      const touchback = cell.startsWith("TB");
+      const marker = cell.includes("?") ? "?" : cell.includes("n") ? "n" : cell.includes("/") ? "/" : "";
+      const distance = outside && match ? Number(match[1]) : null;
+      const landingSpot = touchback ? 20 : outside
+        ? clamp(100 - (position + distance), 1, 99)
+        : clamp(Number(match?.[1]) || 20, 1, 99);
+      const coverage = Number(match?.[3]) || (cell.match(/\d$/) ? Number(cell.slice(-1)) : 0);
+      const coverageGood = blue <= coverage;
+      const puntFac = roll(1, 82);
+      const returner = puntReturners.find((player) => puntFac >= player.start && puntFac <= player.end) || puntReturners[0];
+      let returnYards = 0;
+      let returnRoll = "";
+      let fairCatchRoll = null;
+      let fairCatch = false;
+      if (touchback || marker === "n") {
+        returnYards = 0;
+      } else if (marker === "?") {
+        fairCatchRoll = roll(1, 6);
+        fairCatch = fairCatchRoll <= returner.fairCatch;
+      }
+      if (!touchback && marker !== "n" && !fairCatch) {
+        const returnDice = dicePair();
+        const returnRow = returnDice.white <= 2 ? 0 : returnDice.white <= 4 ? 1 : 2;
+        const returnCell = returner.table[returnRow][returnDice.red - 1];
+        const [high, low] = returnCell.split("/").map(Number);
+        returnYards = coverageGood ? low : high;
+        returnRoll = `${returnDice.red}-${returnDice.white}=${returnDice.code} ${coverageGood ? "good" : "poor"} coverage: ${returnYards} yd`;
+      }
+      const ownSpot = touchback ? 20 : clamp(landingSpot + returnYards, 1, 99);
+      return {
+        ownSpot, distance: outside ? distance : 100 - position - landingSpot,
+        returnYards, touchback, red, white, blue, cell, coverage, coverageGood,
+        puntFac, punter: punter.name, returner: returner.name, returnRoll, fairCatchRoll, fairCatch
+      };
+    }
+
+    function clockContext(role) {
+      const half = !state.overtime && state.quarter <= 2;
+      const left = periodSecondsLeft();
+      const lead = state.score[role] - state.score[other(role)];
+      let mode = "normal";
+      if (half) {
+        if (left <= 120) mode = "hurry";
+      } else if (lead < 0 && left <= 300) mode = "hurry";
+      else if (lead === 0 && left <= 90) mode = "hurry";
+      else if (lead > 0 && left <= 300) mode = "safe";
+      return {
+        half, left, lead, mode,
+        own: state.timeouts[role],
+        oppCalls: lead >= 0 ? state.timeouts[other(role)] : 0
+      };
+    }
+
+    // Kneel when the clock will run out before the opponent can stop it enough times.
+    function shouldKneel(ctx, down) {
+      if (down > 4 || ctx.left <= 0) return false;
+      if (!ctx.half && ctx.lead < 0) return false;
+      const downsLeft = 5 - down;
+      const stopped = Math.min(ctx.oppCalls, downsLeft);
+      return ctx.left <= (downsLeft - stopped) * 40 + stopped * 3;
+    }
+
+    function shouldKickNow(ctx, position) {
+      if (100 - position + 17 > 55) return false;
+      if (ctx.left > (ctx.own > 0 ? 12 : 40)) return false;
+      return ctx.half || (ctx.lead <= 0 && ctx.lead >= -3);
+    }
+
+    function managedPlaySeconds(kind, ctx, role) {
+      const secs = playClockSeconds(kind);
+      const inBounds = kind === "run" || kind === "complete" || kind === "sack" || kind === "scramble";
+      if (ctx.mode === "hurry") {
+        if (!inBounds) return { secs: Math.min(secs, 6), note: "" };
+        if (ctx.left <= 120 && state.timeouts[role] > 0) {
+          state.timeouts[role] -= 1;
+          return { secs: 7, note: `${teamName(role)} timeout (${state.timeouts[role]} left)` };
+        }
+        return { secs: 25, note: "hurry-up" };
+      }
+      const opponent = other(role);
+      if (ctx.mode === "safe" && inBounds && ctx.left <= 120 && state.timeouts[opponent] > 0) {
+        state.timeouts[opponent] -= 1;
+        return { secs: 7, note: `${teamName(opponent)} timeout (${state.timeouts[opponent]} left)` };
+      }
+      return { secs, note: ctx.mode === "safe" && inBounds ? "running clock" : "" };
+    }
+
+    function fourthDownDecision(position, distance) {
+      const fieldGoalDistance = 100 - position + 17;
+      const ctx = clockContext(state.possession);
+      if (!ctx.half && ctx.lead < -3 && ctx.left <= 120) {
+        return {
+          choice: "go", fieldGoalDistance,
+          reason: `4th & ${distance} at ${formatFieldSpot(state.possession, position)}: go for it. Trailing by ${-ctx.lead} with ${clockText(ctx.left)} left, a field goal is not enough.`
+        };
+      }
+      if (!ctx.half && ctx.lead < 0 && ctx.left <= 120 && fieldGoalDistance <= 55) {
+        return {
+          choice: "field-goal", fieldGoalDistance,
+          reason: `4th & ${distance} at ${formatFieldSpot(state.possession, position)}: kick. Trailing by ${-ctx.lead} with ${clockText(ctx.left)} left, a field goal ties or wins.`
+        };
+      }
+      const trailingLate = state.quarter === 4 && state.clock < 240 && state.score[state.possession] < state.score[other(state.possession)];
+      const goForDistance = trailingLate ? 4 : 1;
+      if (position >= 48 && distance <= goForDistance) {
+        return {
+          choice: "go", fieldGoalDistance,
+          reason: `4th & ${distance} at ${formatFieldSpot(state.possession, position)}: go for it (go threshold is ${goForDistance} yard${goForDistance === 1 ? "" : "s"}${trailingLate ? " while trailing late" : ""}).`
+        };
+      }
+      if (fieldGoalDistance <= 55) {
+        return {
+          choice: "field-goal", fieldGoalDistance,
+          reason: `4th & ${distance} at ${formatFieldSpot(state.possession, position)}: kick. Kicker card can reach ${fieldGoalDistance} yards; it is outside the go-for-it threshold (${goForDistance} yard${goForDistance === 1 ? "" : "s"}).`
+        };
+      }
+      return {
+        choice: "punt", fieldGoalDistance,
+        reason: `4th & ${distance} at ${formatFieldSpot(state.possession, position)}: punt. ${fieldGoalDistance}-yard field goal is beyond the kicker-card maximum, and go-for-it requires ${goForDistance} yard${goForDistance === 1 ? "" : "s"} or less beyond midfield.`
+      };
+    }
+
+    function turnoverNextSpot(position) {
+      const returned = roll(0, 18);
+      return clamp(100 - position + returned, 1, 99);
+    }
+
+    function finishSimulatedDrive(role, outcome, nextSpot, plays, startSpot, points, detail) {
+      state.driveNumber += 1;
+      state.driveNumbers[role] += 1;
+      const elapsed = state.elapsedGameSeconds - state.driveStartElapsed;
+      const shownElapsed = Math.max(0, elapsed);
+      state.entries.unshift({
+        team: role,
+        title: outcome,
+        driveNumber: state.driveNumbers[role],
+        detail: `Started at ${formatFieldSpot(role, startSpot)} · ended ${clockText(shownElapsed)} later · ${detail}`,
+        points,
+        plays
+      });
+      if (!state.gameOver || state.overtimeFirstScore) {
+        if (!state.possessionReset) {
+          state.possession = other(role);
+          $("nextStartSide").value = role;
+          state.ball = nextSpot;
+        }
+        syncTabletopFromGame();
+      }
+    }
+
+    function simulateDrive() {
+      if (!state.started || state.gameOver) return;
+      const role = state.possession;
+      const opponentRole = other(role);
+      const startSpot = clamp(state.ball, 1, 99);
+      state.ball = startSpot;
+      state.driveStartElapsed = state.elapsedGameSeconds;
+      const startQuarter = periodText();
+      let down = 1;
+      let distance = Math.min(10, 100 - startSpot);
+      let position = startSpot;
+      let plays = [];
+      let outcome = "Punt";
+      let detail = "Punt exchange";
+      let nextSpot = 25;
+      let points = 0;
+      let finished = false;
+      let playCount = 0;
+      const baseStyle = $("drivePlayStyle").value;
+      state.possessionReset = false;
+      const timeExpired = () => state.clock === 0 && isPeriodEnd() && !state.gameOver;
+
+      const kneel = (ctx) => {
+        let secs = 40;
+        let note = "";
+        if (ctx.oppCalls > 0) {
+          state.timeouts[opponentRole] -= 1;
+          secs = 3;
+          note = ` · ${teamName(opponentRole)} timeout (${state.timeouts[opponentRole]} left)`;
+        }
+        plays.push({ down: `${down}${ordinal(down).slice(-2)} & ${distance}`, text: `Kneel down to run out the clock${note}`, result: "-1 yd", kind: "decision" });
+        position = clamp(position - 1, 1, 99);
+        advanceClock(secs, true);
+      };
+
+      const kickFieldGoal = () => {
+        const attempt = attemptFieldGoal(position);
+        const rollText = `Red-White ${attempt.red}-${attempt.white} · ${attempt.kicker} card range ${attempt.range} yd · Blue ${attempt.blue}${attempt.blocked ? " · BLOCKED (all three dice match)" : ""}`;
+        plays.push({ down: "4th", text: `${attempt.kicker} field goal · ${attempt.distance} yd · ${rollText}`, result: attempt.made ? "Good" : attempt.blocked ? "Blocked" : `No good (range ${attempt.range})`, kind: "kick" });
+        if (attempt.made) {
+          addPoints(role, 3);
+          points = 3;
+          outcome = "Field goal";
+          detail = `${playCount} plays · ${attempt.kicker}, ${attempt.distance} yards`;
+          nextSpot = 25;
+        } else if (attempt.blocked) {
+          outcome = "Blocked field goal";
+          detail = `${playCount} plays · blocked from ${attempt.distance} yards`;
+          nextSpot = turnoverNextSpot(position);
+        } else {
+          outcome = "Missed field goal";
+          detail = `${playCount} plays · ${attempt.distance} yd attempt, card range ${attempt.range}`;
+          nextSpot = clamp(100 - position, 1, 99);
+        }
+        finished = true;
+      };
+
+      while (!finished && !state.gameOver && !timeExpired() && playCount < 24) {
+        playCount += 1;
+        state.ball = position;
+        const ctx = clockContext(role);
+        if (down <= 3 && shouldKickNow(ctx, position)) {
+          plays.push({ down: `${down}${ordinal(down).slice(-2)} & ${distance}`, text: `${clockText(ctx.left)} left in the ${ctx.half ? "half" : "game"}: kick the field goal now rather than risk running out of time.`, result: "Field goal", kind: "decision" });
+          kickFieldGoal();
+          continue;
+        }
+        if (down <= 3 && shouldKneel(ctx, down)) {
+          kneel(ctx);
+          down += 1;
+          distance += 1;
+          state.ball = position;
+          continue;
+        }
+        const style = ctx.mode === "safe" ? "run" : ctx.mode === "hurry" && !ctx.half && ctx.lead < 0 ? "pass" : baseStyle;
+        const before = position;
+        const call = chooseCall(down, distance, position, style);
+        const fac = state.currentFac || roll(1, 82);
+        const play = {
+          down: `${down}${ordinal(down).slice(-2)} & ${distance}`,
+          text: `${call.call} · dice ${call.red}-${call.white}-${call.blue} · ${call.alignment}/${call.strategy} · FAC ${fac}${call.biased ? " · play-mix bias" : ""}`,
+          result: "", before, kind: "normal"
+        };
+        let yards = 0;
+        let elapsed = 10;
+        let fumbleRate = 0;
+        let scorer = "";
+        let turnover = false;
+
+        if (call.type === "run") {
+          const card = getRunCard(fac);
+          const keyDefender = getKeyDefender(call, "Run", fac);
+          const side = call.call.startsWith("IL") || call.call.startsWith("IR") ? "inside" : "outside";
+          const cardResult = card[side][call.white - 1][call.red - 1];
+          const resolved = resolveRunCell(cardResult, card, keyDefender, call, { fac });
+          yards = resolved.yards;
+          fumbleRate = card.fumbles;
+          play.text += ` · ${card.name} · ${resolved.detail}`;
+          play.result = `${yards > 0 ? "+" : ""}${yards} yd${resolved.stopped ? " (defense wins check)" : ""}`;
+          play.kind = "run";
+          elapsed = playClockSeconds("run");
+          scorer = card.name;
+        } else {
+          const pass = resolvePassPlay(call, fac, position);
+          yards = pass.yards;
+          play.text += ` · ${pass.text}`;
+          play.result = pass.result;
+          play.kind = pass.kind;
+          elapsed = playClockSeconds(pass.kind);
+          scorer = pass.receiver?.name || offenseTeam().offense.quarterback.name;
+          fumbleRate = pass.kind === "sack" || pass.kind === "scramble" ? 1 : 0;
+          if (pass.kind === "interception") {
+            position = pass.spot;
+            play.result = `Intercepted at ${formatFieldSpot(role, position)}`;
+            turnover = true;
+            nextSpot = turnoverNextSpot(position);
+            outcome = "Interception";
+            detail = `${playCount} plays · intercepted by ${teamName(opponentRole)} at ${formatFieldSpot(role, position)}`;
+          }
+        }
+
+        if (!turnover) position = clamp(position + yards, 0, 100);
+        if (fumbleRate > 0) {
+          const fumble = resolveFumble(fumbleRate, position);
+          if (fumble) {
+            play.text += ` · FUM check ${fumble.check}`;
+            if (fumble.lost) {
+              play.result = `Fumble lost at ${formatFieldSpot(role, position)}`;
+              play.kind = "turnover";
+              turnover = true;
+              nextSpot = fumble.nextSpot;
+              outcome = "Fumble lost";
+              detail = `${playCount} plays · fumble lost at ${formatFieldSpot(role, position)}`;
+            } else {
+              play.result += ` · fumble recovered by ${teamName(role)}`;
+            }
+          }
+        }
+
+        state.currentFac = roll(1, 82);
+        plays.push(play);
+        if (!turnover) {
+          const managed = managedPlaySeconds(play.kind, ctx, role);
+          elapsed = managed.secs;
+          if (managed.note) play.text += ` · ${managed.note}`;
+        }
+        advanceClock(elapsed, true);
+
+        if (turnover) {
+          finished = true;
+          continue;
+        }
+        if (position >= 100) {
+          addPoints(role, 7);
+          points = 7;
+          outcome = "Touchdown";
+          detail = `${playCount} plays · ${scorer} scores`;
+          nextSpot = 25;
+          finished = true;
+          continue;
+        }
+        if (timeExpired()) break;
+
+        if (play.kind === "incomplete" || play.kind === "sack") {
+          down += 1;
+          distance = Math.min(99, Math.max(1, distance - yards));
+        } else if (yards >= distance) {
+          down = 1;
+          distance = Math.min(10, 100 - position);
+        } else {
+          down += 1;
+          distance = Math.max(1, distance - yards);
+        }
+        state.ball = position;
+
+        if (down > 4) {
+          outcome = "Turnover on downs";
+          detail = `${playCount} plays · stopped at ${formatFieldSpot(role, position)}`;
+          nextSpot = clamp(100 - position, 1, 99);
+          finished = true;
+        } else if (down === 4 && shouldKneel(clockContext(role), 4) && !shouldKickNow(clockContext(role), position)) {
+          kneel(clockContext(role));
+          outcome = "Turnover on downs";
+          detail = `${playCount} plays · kneel down at ${formatFieldSpot(role, position)}`;
+          nextSpot = clamp(100 - position, 1, 99);
+          finished = true;
+        } else if (down === 4) {
+          const ctx4 = clockContext(role);
+          const kickNow = shouldKickNow(ctx4, position);
+          const decision = kickNow
+            ? { choice: "field-goal", reason: `4th & ${distance}: ${clockText(ctx4.left)} left, kick the field goal now.` }
+            : fourthDownDecision(position, distance);
+          plays.push({ down: `4th & ${distance}`, text: decision.reason, result: decision.choice === "go" ? "Go for it" : decision.choice === "field-goal" ? "Field goal" : "Punt", kind: "decision" });
+          if (decision.choice === "field-goal") {
+            kickFieldGoal();
+          } else if (decision.choice === "punt") {
+            const punt = puntNextSpot(position);
+            const coverageText = `Red-White-Blue ${punt.red}-${punt.white}-${punt.blue} · card ${punt.cell} · coverage ${punt.blue} ${punt.coverageGood ? "beats" : "misses"} ${punt.coverage}`;
+            const returnText = punt.touchback ? "touchback" : punt.fairCatch ? `FAC ${punt.puntFac} ${punt.returner} fair catch (FC roll ${punt.fairCatchRoll})` : punt.returnRoll ? `FAC ${punt.puntFac} ${punt.returner}; ${punt.returnRoll}` : "no return";
+            plays.push({ down: "4th", text: `${punt.punter} punt · ${punt.distance} yd · ${coverageText} · ${returnText}`, result: punt.touchback ? "Touchback" : `${punt.distance} yd punt, return ${punt.returnYards} yd`, kind: "kick" });
+            advanceClock(playClockSeconds("punt"), true);
+            outcome = "Punt";
+            detail = `${playCount} plays · ${teamName(opponentRole)} starts at ${formatFieldSpot(opponentRole, punt.ownSpot)} · ${punt.distance} yd punt`;
+            nextSpot = punt.ownSpot;
+            finished = true;
+          }
+        }
+      }
+
+      if (!finished) {
+        const endOfHalf = !state.overtime && state.quarter === 2;
+        const tiedRegulation = !state.overtime && state.quarter === 4 && state.score.home === state.score.visitor;
+        outcome = timeExpired() ? (endOfHalf ? "End of half" : tiedRegulation ? "End of regulation" : "End of game") : "Drive ended";
+        detail = `${plays.length} plays · ${startQuarter} start`;
+        nextSpot = clamp(100 - position, 1, 99);
+      }
+      settlePeriodEnd();
+      finishSimulatedDrive(role, outcome, nextSpot, plays, startSpot, points, detail);
+      render();
+    }
+
+    function recordAndSwitchDrive() {
+      if (!state.started || state.gameOver) return;
+      const role = state.possession;
+      const targetElapsed = (state.tabletop.quarter - 1) * 900 + (900 - state.tabletop.clock);
+      const elapsed = targetElapsed - state.elapsedGameSeconds;
+      if (elapsed < 0) {
+        notify("The tabletop clock cannot be earlier than the current game time.");
+        return;
+      }
+      const result = $("manualDriveResult").value;
+      const points = Math.max(0, state.tabletop[`${role}Score`] - state.score[role]);
+      const nextRole = other(role);
+      const nextSpot = nextTeamStartingSpot(nextRole);
+      const label = { punt: "Punt", "field-goal": "Field goal", touchdown: "Touchdown", turnover: "Turnover", downs: "Turnover on downs", safety: "Safety", other: "Other" }[result];
+      state.score[role] = clamp(state.tabletop[`${role}Score`], 0, 99);
+      state.score.home = clamp(state.tabletop.homeScore, 0, 99);
+      state.score.visitor = clamp(state.tabletop.visitorScore, 0, 99);
+      advanceClock(elapsed);
+      state.driveNumber += 1;
+      state.driveNumbers[role] += 1;
+      state.entries.unshift({
+        team: role,
+        title: label,
+        driveNumber: state.driveNumbers[role],
+        detail: `Tabletop entry · ${clockText(elapsed)} elapsed · ${teamName(nextRole)} starts at ${formatFieldSpot(nextRole, nextSpot)}`,
+        points,
+        plays: []
+      });
+      if (!state.gameOver) {
+        state.possession = nextRole;
+        $("nextStartSide").value = role;
+        state.ball = nextSpot;
+      }
+      syncTabletopFromGame();
+      render();
+    }
+
+    function switchPossession() {
+      if (!state.started || state.gameOver) return;
+      const targetElapsed = (state.tabletop.quarter - 1) * 900 + (900 - state.tabletop.clock);
+      const elapsed = targetElapsed - state.elapsedGameSeconds;
+      if (elapsed < 0) {
+        notify("The tabletop clock cannot be earlier than the current game time.");
+        return;
+      }
+      state.score.visitor = clamp(state.tabletop.visitorScore, 0, 99);
+      state.score.home = clamp(state.tabletop.homeScore, 0, 99);
+      advanceClock(elapsed);
+      if (state.gameOver) {
+        render();
+        return;
+      }
+      const currentRole = state.possession;
+      const nextRole = other(currentRole);
+      const nextSpot = nextTeamStartingSpot(nextRole);
+      state.possession = nextRole;
+      $("nextStartSide").value = currentRole;
+      state.ball = nextSpot;
+      syncTabletopFromGame();
+      render();
+    }
+
+    function resetForAnotherGame() {
+      state.started = false;
+      state.gameOver = false;
+      state.startMode = "new";
+      state.entries = [];
+      state.score = { home: 0, visitor: 0 };
+      state.clock = 900;
+      state.quarter = 1;
+      state.possession = "visitor";
+      state.ball = 25;
+      state.driveNumber = 0;
+      state.driveNumbers = { home: 0, visitor: 0 };
+      state.seed = "";
+      state.random = makeRandom(state.seed);
+      state.currentFac = null;
+      state.elapsedGameSeconds = 0;
+      state.overtime = false;
+      state.overtimeFirstScore = false;
+      state.timeouts = { home: 3, visitor: 3 };
+      state.secondHalfOpener = "home";
+      Object.assign(state.tabletop, {
+        visitorScore: 0, homeScore: 0, quarter: 1, clock: 900, down: 1, distance: 10,
+        yardLine: 25, visitorOffIndex: 0, visitorDefIndex: 0, homeOffIndex: 0, homeDefIndex: 0,
+        column: 4, row: 1, alignment: "Automatic", blueDie: 1
+      });
+      syncTeamSheetIndexes();
+      $("firstPossession").value = "visitor";
+      $("seedInput").value = "";
+      $("drivePlayStyle").value = "balanced";
+      $("manualDriveResult").value = "punt";
+      $("nextStartSide").value = other($("firstPossession").value);
+      $("nextStartYard").value = 25;
+      syncTabletopFromGame();
+      render();
+      $("firstPossession").focus();
+    }
+
+    function openRestartDialog() {
+      $("restartDialog").showModal();
+      $("cancelRestartButton").focus();
+    }
+
+    function fillTeamSelect(select, ids, selected) {
+      select.replaceChildren(...ids.map((id) => {
+        const profile = teamProfiles[id];
+        return new Option(`${profile.season} ${profile.name}`, id);
+      }));
+      if (ids.includes(selected)) select.value = selected;
+    }
+
+    async function loadSeason() {
+      const file = $("seasonFile").files[0];
+      if (!file) {
+        $("seasonStatus").textContent = "Choose an Inside Sports season PDF first.";
+        return;
+      }
+      const button = $("loadSeasonButton");
+      button.disabled = true;
+      $("seasonStatus").textContent = `Reading ${file.name} locally...`;
+      try {
+        const form = new FormData();
+        form.append("seasonFile", file);
+        const response = await fetch("/api/load-season", { method: "POST", body: form });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error || "Could not read the selected season PDF.");
+        teamProfiles = Object.fromEntries(payload.profiles.map((profile) => [profile.id, profile]));
+        const available = payload.availableTeams;
+        const visitor = available[0] || "";
+        const home = available.find((id) => id !== visitor) || "";
+        state.matchup = { visitor, home };
+        fillTeamSelect($("visitorTeamSelect"), available, visitor);
+        fillTeamSelect($("homeTeamSelect"), available, home);
+        syncTeamSheetIndexes();
+        const unavailable = payload.unavailableTeams.length;
+        const missing = payload.unavailableTeams.slice(0, 4)
+          .map((profile) => `${profile.name}: ${profile.missing.join(", ")}`)
+          .join("; ");
+        $("seasonStatus").textContent = available.length >= 2
+          ? `${file.name}: ${available.length} complete profiles loaded${unavailable ? `; ${unavailable} incomplete teams excluded (${missing})` : ""}.`
+          : `${file.name}: ${available.length} complete profiles; two different teams are required.${missing ? ` Incomplete: ${missing}` : ""}`;
+        render();
+      } catch (error) {
+        $("seasonStatus").textContent = location.protocol === "file:"
+          ? "This file was opened directly. Double-click Start Inside Blitz Drive Desk.bat in this folder to start the local server and open the desk."
+          : error instanceof TypeError && /fetch|network/i.test(error.message)
+            ? "Cannot reach the season loader. Double-click Start Inside Blitz Drive Desk.bat in the simulator folder, then reload this page."
+            : error instanceof Error ? error.message : "Could not read the selected season PDF.";
+      } finally {
+        button.disabled = false;
+      }
+    }
+
+    $("loadSeasonButton").addEventListener("click", loadSeason);
+    $("drawFacButton").addEventListener("click", () => drawFac(false));
+    $("addFacButton").addEventListener("click", () => drawFac(true));
+    $("previousFacButton").addEventListener("click", () => showFacHistory(-1));
+    $("nextFacButton").addEventListener("click", () => showFacHistory(1));
+    $("reshuffleFacButton").addEventListener("click", reshuffleFacDeck);
+    $("visitorTeamSelect").addEventListener("change", (event) => {
+      state.matchup.visitor = event.currentTarget.value;
+      if (state.matchup.visitor === state.matchup.home) {
+        state.matchup.home = Array.from($("homeTeamSelect").options).find((option) => option.value !== state.matchup.visitor)?.value || "";
+        $("homeTeamSelect").value = state.matchup.home;
+      }
+      syncTeamSheetIndexes();
+      render();
+    });
+    $("homeTeamSelect").addEventListener("change", (event) => {
+      state.matchup.home = event.currentTarget.value;
+      if (state.matchup.home === state.matchup.visitor) {
+        state.matchup.visitor = Array.from($("visitorTeamSelect").options).find((option) => option.value !== state.matchup.home)?.value || "";
+        $("visitorTeamSelect").value = state.matchup.visitor;
+      }
+      syncTeamSheetIndexes();
+      render();
+    });
+    $("startButton").addEventListener("click", openStartConfirmation);
+    $("cancelStartButton").addEventListener("click", () => $("startConfirmDialog").close());
+    $("confirmStartButton").addEventListener("click", () => {
+      $("startConfirmDialog").close();
+      startGame();
+    });
+    for (const button of document.querySelectorAll(".start-mode-button")) {
+      button.addEventListener("click", () => {
+        state.startMode = button.dataset.startMode;
+        render();
+      });
+    }
+    $("rollPlayDiceButton").addEventListener("click", rollPlayCallDice);
+    $("rollActualOffPlay").addEventListener("click", () => rollActualDice("offPlay"));
+    $("rollAllActualDice").addEventListener("click", rollAllActualDice);
+    $("rollActualPassYards").addEventListener("click", () => rollActualDice("passYards"));
+    $("rollActualSecRec").addEventListener("click", () => rollActualDice("secRec"));
+    $("rollActualScramble").addEventListener("click", () => rollActualDice("scramble"));
+    $("rollActualExtra").addEventListener("click", () => rollActualDice("extra"));
+    $("simulateButton").addEventListener("click", simulateDrive);
+    $("recordButton").addEventListener("click", recordAndSwitchDrive);
+    $("switchPossessionButton").addEventListener("click", switchPossession);
+    $("newGameButton").addEventListener("click", openRestartDialog);
+    $("restartGameButton").addEventListener("click", openRestartDialog);
+    $("cancelRestartButton").addEventListener("click", () => $("restartDialog").close());
+    $("confirmRestartButton").addEventListener("click", () => {
+      $("restartDialog").close();
+      resetForAnotherGame();
+    });
+    $("firstPossession").addEventListener("change", render);
+    for (const button of document.querySelectorAll(".down-button")) {
+      button.addEventListener("click", () => {
+        state.tabletop.down = Number(button.dataset.down);
+        render();
+      });
+    }
+    $("clockMinusForty").addEventListener("click", () => adjustTabletopClock(-40));
+    $("clockMinusTen").addEventListener("click", () => adjustTabletopClock(-10));
+    $("clockMinusMinute").addEventListener("click", () => adjustTabletopClock(-60));
+    $("clockPlusMinute").addEventListener("click", () => adjustTabletopClock(60));
+    let draggingBall = false;
+    $("fieldTrack").addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      draggingBall = true;
+      $("fieldTrack").setPointerCapture(event.pointerId);
+      updateFieldFromPointer(event);
+    });
+    $("fieldTrack").addEventListener("pointermove", (event) => {
+      if (draggingBall) updateFieldFromPointer(event);
+    });
+    $("fieldTrack").addEventListener("pointerup", () => { draggingBall = false; });
+    $("fieldTrack").addEventListener("pointercancel", () => { draggingBall = false; });
+    $("ballMarker").addEventListener("keydown", (event) => {
+      const current = state.started ? state.ball : state.tabletop.yardLine;
+      const steps = event.shiftKey ? 10 : 1;
+      const team = activeFieldTeam();
+      if (event.key === "ArrowLeft") setFieldPosition(current - (team === state.matchup.home ? -steps : steps));
+      else if (event.key === "ArrowRight") setFieldPosition(current + (team === state.matchup.home ? -steps : steps));
+      else if (event.key === "ArrowDown") setFieldPosition(current - steps);
+      else if (event.key === "ArrowUp") setFieldPosition(current + steps);
+      else if (event.key === "Home") setFieldPosition(1);
+      else if (event.key === "End") setFieldPosition(99);
+      else return;
+      event.preventDefault();
+    });
+    $("clearLogButton").addEventListener("click", () => {
+      state.entries = [];
+      renderLog();
+      notify("Drive ledger cleared. Score and game state are unchanged.");
+    });
+
+    for (const inputId of Object.keys(tabletopInputKeys)) {
+      $(inputId).addEventListener("input", updateTabletopInput);
+      $(inputId).addEventListener("change", updateTabletopInput);
+    }
+
+    loadFacDeck();
+    syncTeamSheetIndexes();
+    render();
+  </script>
+</body>
+</html>

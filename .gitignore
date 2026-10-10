@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+
+# Copyrighted game material
+*.pdf
+charts.txt
+fac.txt
+rules.txt
+teams.txt

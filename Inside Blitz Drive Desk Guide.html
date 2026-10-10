@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Using the Inside Blitz Drive Desk</title>
+  <style>
+    :root { color-scheme: light; --ink: #18271f; --muted: #65766b; --paper: #f1f5ef; --panel: #fcfdf9; --line: #ced9cd; --pine: #194b3c; --gold: #f0bd64; --mint: #e6f1e8; }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: var(--paper); font: 15px/1.6 "Trebuchet MS", "Segoe UI", sans-serif; }
+    header { color: #f5f8f1; background: var(--pine); border-bottom: 4px solid var(--gold); }
+    .mast, main { width: min(820px, calc(100% - 36px)); margin: 0 auto; }
+    .mast { display: flex; justify-content: space-between; align-items: center; gap: 16px; padding: 15px 0; }
+    .eyebrow { color: #c8dbcf; font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; }
+    header a { color: #f1d69c; font-size: 13px; text-underline-offset: 3px; }
+    main { padding: 28px 0 42px; }
+    h1 { margin: 0 0 7px; font: 700 31px/1.2 Georgia, serif; }
+    .intro { margin: 0 0 23px; color: var(--muted); }
+    section { margin-top: 15px; padding: 17px 19px; border: 1px solid var(--line); border-radius: 5px; background: var(--panel); }
+    h2 { margin: 0 0 8px; font-size: 16px; }
+    p { margin: 7px 0; }
+    ol { margin: 8px 0 0; padding-left: 22px; }
+    li { padding: 3px 0 3px 4px; }
+    strong { color: var(--pine); }
+    .note { border-left: 3px solid var(--gold); background: #f3f5e9; }
+    .future { border-left: 3px solid var(--pine); background: var(--mint); }
+    @media (max-width: 520px) { .mast, main { width: calc(100% - 24px); } .mast { align-items: flex-start; flex-direction: column; gap: 4px; } main { padding-top: 21px; } h1 { font-size: 27px; } section { padding: 14px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="mast">
+      <div class="eyebrow">Inside Blitz Drive Desk · quick guide</div>
+      <a href="Inside%20Blitz%20Drive%20Desk.html">Return to the game</a>
+    </div>
+  </header>
+  <main>
+    <h1>Using the Drive Desk</h1>
+    <p class="intro">For every possession, choose to simulate the drive or enter its tabletop result and switch possession.</p>
+
+    <section>
+      <h2>Set up the game</h2>
+      <ol>
+        <li>Upload an Inside Sports season PDF, then choose the visitor and home teams from the complete profiles found in it.</li>
+        <li>Choose which team receives the opening possession. The opening spot is that team's own 25-yard line.</li>
+        <li>For any team with the ball, choose <strong>Simulate Drive</strong> to resolve it with the engine, or enter its tabletop result and choose <strong>Record &amp; Switch</strong>.</li>
+        <li>Leave the roll seed blank for a fresh sequence each game. Enter a seed when you want to replay the same sequence.</li>
+        <li>Select <strong>Start new game</strong>. The desk tracks the score, quarter, clock, possession, and field position.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Use the game board</h2>
+      <ol>
+        <li>Type either score directly or move its black slider. Set the quarter from its selector or slider, and enter time as MM:SS or adjust the clock slider.</li>
+        <li>Drag the field marker to set the current ball spot, or focus it and use the arrow keys (Shift+arrow moves 10 yards). Visitors attack left to right; home attacks right to left. Past midfield, the label switches to the opponent's yard line.</li>
+        <li>Enter visitor/home offensive and defensive indices from the printed team sheets. The suggested alignment uses down × distance + offense OFF + opposing DEF. Leave Defensive alignment on Suggested or select Short, Run, Starters, Nickel, or Dime directly.</li>
+        <li>Use the red-die slider for the matrix column and the white-die slider for the row. The blue-die slider selects the defensive strategy in that alignment's bottom row. The rating-check roll and previous FAC number are separate controls.</li>
+        <li>Resolve the current team's drive with the printed rules, charts, team cards, and FACs. Enter its result and the next team's starting spot; use 25 for a touchback.</li>
+        <li>Select <strong>Record &amp; Switch</strong> to commit the board score and clock and add the drive to the ledger.</li>
+        <li>Use <strong>Switch possession</strong> to change who has the ball without recording a drive. Choose the next team's territory and yard line first.</li>
+      </ol>
+    </section>
+
+    <section>
+      <h2>Simulate a drive</h2>
+      <ol>
+        <li>Choose Balanced, Run-heavy, or Pass-heavy to set the current offense's play mix.</li>
+        <li>Select <strong>Simulate Drive</strong> for the team with the ball. Review the outcome and expand the ledger entry to see the plays and rolls.</li>
+        <li>On 4th down, the log explains the choice and shows the active kicker's card roll or punter's table, coverage, FAC, and return rolls.</li>
+        <li>The ledger numbers home and visitor drives separately. The newest completed drive stays at the top and has that team's highest drive number so far.</li>
+        <li>The desk hands possession to the opponent after the simulated drive. Either simulate that drive too, or enter its tabletop result.</li>
+      </ol>
+    </section>
+
+    <section class="note">
+      <h2>What the desk models</h2>
+      <p>The resolver reads the active home/visitor team profiles for player cards, defensive ratings, and special-teams tables; play matrices and dice procedures come from the Inside Blitz charts. Exact FAC key-position mapping and some S/B and receiver-yardage lookup cells remain approximated.</p>
+      <p>Upload an Inside Sports season PDF in game setup, then choose the visitor and home profiles. Teams missing required card data are excluded from the selectors rather than filled with substitute ratings. Uploads are processed locally and discarded after extraction.</p>
+      <p>Field position is shown relative to the possessing team: after midfield, it counts down in opponent territory.</p>
+      <p>Clearing the ledger removes its entries only; it does not reset the score or game state. Use <strong>Restart game</strong> whenever you want a complete reset; confirm in the dialog to clear the current game and board.</p>
+    </section>
+
+    <section class="future">
+      <h2>Current scope and future direction</h2>
+      <p>Team ratings and card tables are read from the uploaded PDF; the desk contains no bundled franchise profiles. Profiles must include complete run, receiver, quarterback, defense, and special-teams data before they can be selected.</p>
+    </section>
+  </main>
+</body>
+</html>
