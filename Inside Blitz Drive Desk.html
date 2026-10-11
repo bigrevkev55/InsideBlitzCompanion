@@ -584,6 +584,15 @@
       <button class="primary" id="confirmStartButton" type="button">Start new game</button>
     </div>
   </dialog>
+  <dialog class="restart-dialog" id="driveConfirmDialog" aria-labelledby="driveConfirmTitle" aria-describedby="driveConfirmState driveConfirmExplanation">
+    <h2 id="driveConfirmTitle">Simulate from this game state?</h2>
+    <p id="driveConfirmState"></p>
+    <p id="driveConfirmExplanation">Confirm to simulate the drive from this state. If it is not right, cancel, update the game state on the board, then click Simulate Drive again.</p>
+    <div class="restart-actions">
+      <button class="secondary" id="cancelDriveButton" type="button">Cancel</button>
+      <button class="primary" id="confirmDriveButton" type="button">Confirm &amp; Simulate</button>
+    </div>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -887,10 +896,11 @@
         value = clamp(Number(match[1]) * 60 + Number(match[2]), 0, 900);
       }
       if (inputId === "boardYardLine") {
-        value = clamp(value, 1, 50);
+        value = clamp(Math.round(value), 1, 50);
         if (state.tabletop.yardLine > 50) value = 100 - value;
       }
-      if (key === "visitorScore" || key === "homeScore") value = clamp(value, 0, 99);
+      if (key === "visitorScore" || key === "homeScore") value = clamp(Math.round(value), 0, 99);
+      if (key === "distance") value = clamp(Math.round(value), 1, 99);
       if (inputId === "boardYardLine") pinGainLine();
       if (key === "distance") state.tabletop.gainLine = null;
       state.tabletop[key] = value;
@@ -1708,8 +1718,35 @@
           $("nextStartSide").value = role;
           state.ball = nextSpot;
         }
+        state.tabletop.down = 1;
+        state.tabletop.distance = Math.min(10, 100 - state.ball);
+        state.tabletop.gainLine = null;
         syncTabletopFromGame();
       }
+    }
+
+    function openDriveConfirmation() {
+      if (!state.started || state.gameOver) return;
+      const board = state.tabletop;
+      const role = state.possession;
+      const period = state.overtime ? "Overtime" : `${ordinal(board.quarter)} quarter`;
+      $("driveConfirmState").textContent = `${teamName(state.matchup[role])} ball at ${formatFieldSpot(role, board.yardLine)}, ${ordinal(board.down)} & ${board.distance}; ${teamName(state.matchup.home)} ${board.homeScore}, ${teamName(state.matchup.visitor)} ${board.visitorScore}; ${period}, ${clockText(board.clock)}.`;
+      $("driveConfirmDialog").showModal();
+      $("cancelDriveButton").focus();
+    }
+
+    function applyTabletopGameStateForDrive() {
+      const board = state.tabletop;
+      state.quarter = clamp(Math.round(board.quarter), 1, 4);
+      state.clock = clamp(Math.round(board.clock), 0, 900);
+      state.ball = clamp(Math.round(board.yardLine), 1, 99);
+      state.score = {
+        home: clamp(Math.round(board.homeScore), 0, 99),
+        visitor: clamp(Math.round(board.visitorScore), 0, 99)
+      };
+      state.elapsedGameSeconds = state.overtime
+        ? 3600 + (900 - state.clock)
+        : (state.quarter - 1) * 900 + (900 - state.clock);
     }
 
     function simulateDrive() {
@@ -1720,8 +1757,8 @@
       state.ball = startSpot;
       state.driveStartElapsed = state.elapsedGameSeconds;
       const startQuarter = periodText();
-      let down = 1;
-      let distance = Math.min(10, 100 - startSpot);
+      let down = clamp(Math.round(state.tabletop.down), 1, 4);
+      let distance = clamp(Math.round(state.tabletop.distance), 1, 99);
       let position = startSpot;
       let plays = [];
       let outcome = "Punt";
@@ -2131,7 +2168,13 @@
     $("rollActualSecRec").addEventListener("click", () => rollActualDice("secRec"));
     $("rollActualScramble").addEventListener("click", () => rollActualDice("scramble"));
     $("rollActualExtra").addEventListener("click", () => rollActualDice("extra"));
-    $("simulateButton").addEventListener("click", simulateDrive);
+    $("simulateButton").addEventListener("click", openDriveConfirmation);
+    $("cancelDriveButton").addEventListener("click", () => $("driveConfirmDialog").close());
+    $("confirmDriveButton").addEventListener("click", () => {
+      $("driveConfirmDialog").close();
+      applyTabletopGameStateForDrive();
+      simulateDrive();
+    });
     $("recordButton").addEventListener("click", recordAndSwitchDrive);
     $("switchPossessionButton").addEventListener("click", switchPossession);
     $("newGameButton").addEventListener("click", openRestartDialog);
