@@ -1778,11 +1778,19 @@
           kickFieldGoal();
           continue;
         }
-        if (down <= 3 && shouldKneel(ctx, down)) {
+        if (down <= 4 && shouldKneel(ctx, down)) {
           kneel(ctx);
-          down += 1;
-          distance += 1;
           state.ball = position;
+          if (timeExpired()) break;
+          if (down === 4) {
+            outcome = "Turnover on downs";
+            detail = `${playCount} plays · kneel down at ${formatFieldSpot(role, position)}`;
+            nextSpot = clamp(100 - position, 1, 99);
+            finished = true;
+          } else {
+            down += 1;
+            distance += 1;
+          }
           continue;
         }
         const style = ctx.mode === "safe" ? "run" : ctx.mode === "hurry" && !ctx.half && ctx.lead < 0 ? "pass" : baseStyle;
@@ -1889,12 +1897,6 @@
         if (down > 4) {
           outcome = "Turnover on downs";
           detail = `${playCount} plays · stopped at ${formatFieldSpot(role, position)}`;
-          nextSpot = clamp(100 - position, 1, 99);
-          finished = true;
-        } else if (down === 4 && shouldKneel(clockContext(role), 4) && !shouldKickNow(clockContext(role), position)) {
-          kneel(clockContext(role));
-          outcome = "Turnover on downs";
-          detail = `${playCount} plays · kneel down at ${formatFieldSpot(role, position)}`;
           nextSpot = clamp(100 - position, 1, 99);
           finished = true;
         } else if (down === 4) {
