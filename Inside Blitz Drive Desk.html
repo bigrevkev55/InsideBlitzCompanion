@@ -95,7 +95,10 @@
     .field-track::after { right: 5%; }
     .field-line-to-gain { position: absolute; z-index: 1; top: 0; bottom: 0; left: 35%; width: 3px; background: #f28c28; box-shadow: 0 0 0 1px #743b14aa; pointer-events: none; transition: left .12s ease; }
     .field-line-to-gain::before { position: absolute; top: 3px; left: 50%; padding: 2px 4px; transform: translateX(-50%); border-radius: 2px; color: #fff; background: #8b4513; content: "TO GAIN"; font-size: 8px; font-weight: 800; white-space: nowrap; }
-    .ball-marker { position: absolute; z-index: 2; top: 50%; left: 25%; display: grid; place-items: center; width: 34px; height: 34px; transform: translate(-50%, -50%); border: 2px solid #fff5d8; border-radius: 50%; color: #302314; background: var(--gold); font-size: 12px; font-weight: 800; box-shadow: 0 2px 7px #133c2c88; transition: left .12s ease; cursor: grab; touch-action: none; user-select: none; }
+    .ball-marker { position: absolute; z-index: 2; top: 50%; left: 25%; display: grid; place-items: center; width: 52px; height: 30px; transform: translate(-50%, -50%); border: 2px solid #3b1f0e; border-radius: 50% / 50%; color: #fff; background: #8a4b21; font-size: 13px; font-weight: 800; text-shadow: 0 1px 2px #000b; box-shadow: 0 2px 7px #133c2c88, inset 0 -4px 6px #0004; transition: left .12s ease; cursor: grab; touch-action: none; user-select: none; }
+    .ball-marker::before, .ball-marker::after { position: absolute; top: 3px; bottom: 3px; width: 3px; background: #fff; border-radius: 2px; content: ""; opacity: .9; }
+    .ball-marker::before { left: 9px; }
+    .ball-marker::after { right: 9px; }
     .ball-marker:active { cursor: grabbing; }
     .ball-marker:focus-visible { outline: 3px solid #fff; outline-offset: 2px; }
     .field-caption { display: flex; justify-content: space-between; color: #e0eadf; font-size: 11px; }
@@ -109,6 +112,7 @@
     .tabletop-columns { display: grid; grid-template-columns: minmax(215px, .9fr) minmax(320px, 1.2fr) minmax(170px, .65fr); gap: 12px; align-items: start; }
     .board-area { min-width: 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: #fff; }
     .board-area h3 { margin: 0 0 10px; font-size: 13px; }
+    .board-column { display: grid; gap: 12px; min-width: 0; }
     .board-control-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
     .matrix-dice { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 0 0 12px; padding: 10px; border: 1px solid var(--line); border-radius: 4px; background: #f7faf5; }
     .matrix-die-group { display: grid; justify-items: center; gap: 4px; min-width: 54px; }
@@ -125,6 +129,10 @@
     .actual-rolls { display: grid; margin-top: 12px; border-top: 1px solid var(--line); }
     .actual-roll-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 40px; padding: 5px 0; border-bottom: 1px solid var(--line); }
     .actual-roll-head strong { color: var(--ink); font-size: 11px; }
+    .roll-toggle { min-height: 0; padding: 4px 0; border: 0; background: transparent; color: var(--ink); font-size: 12px; font-weight: 700; text-align: left; cursor: pointer; }
+    .roll-toggle::before { display: inline-block; width: 1em; content: "▸"; }
+    .roll-toggle[aria-expanded="true"]::before { content: "▾"; }
+    #actualRollRows[hidden] { display: none; }
     .actual-roll-row { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; align-items: center; gap: 6px; min-height: 43px; padding: 5px 0; border-bottom: 1px solid #edf1eb; }
     .actual-roll-title { color: var(--ink); font-size: 10px; font-weight: 700; }
     .actual-roll-faces { display: flex; flex-wrap: nowrap; gap: 3px; }
@@ -133,15 +141,41 @@
     .actual-roll-button { min-height: 30px; padding: 4px 7px; font-size: 10px; }
     .board-control { display: grid; min-width: 0; gap: 5px; }
     .board-control.full { grid-column: 1 / -1; }
+    .dice-sliders { grid-column: 1 / -1; }
+    .team-indexes summary { cursor: pointer; font-weight: 700; font-size: 13px; margin-bottom: 8px; }
+    .team-indexes summary output { font-variant-numeric: tabular-nums; }
+    .dice-sliders summary { cursor: pointer; font-weight: 700; font-size: 12px; margin-bottom: 8px; }
     .down-button-group { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
     .down-button { min-width: 0; min-height: 34px; padding: 5px 3px; border: 1px solid var(--line); border-radius: 3px; color: var(--pine); background: #fff; font-size: 11px; font-weight: 700; }
     .down-button[aria-pressed="true"] { border-color: var(--pine); color: #fff; background: var(--pine); }
+    #boardDistance { min-height: 34px; border: 1px solid var(--pine); border-radius: 3px; color: #fff; background: var(--pine); font-weight: 700; text-align: center; }
+    #boardDistance:focus-visible { outline: 2px solid var(--gold); outline-offset: 1px; }
+    #boardDistance:invalid, #boardDistance:user-invalid { border-color: var(--rust); }
     .board-control label { display: flex; justify-content: space-between; gap: 7px; }
     .board-control output { color: var(--ink); font-variant-numeric: tabular-nums; }
     .board-control-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; min-height: 27px; }
     .clock-step-actions { display: flex; gap: 4px; }
     .clock-step { flex: 1; min-width: 0; min-height: 29px; padding: 3px 5px; color: var(--pine); border: 1px solid var(--line); border-radius: 3px; background: #fff; font-size: 10px; font-weight: 700; }
     .clock-step:hover { background: var(--mint); }
+    .clock-step:disabled { opacity: .45; cursor: default; }
+    .field-nudges { display: flex; align-items: center; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .field-nudges .clock-step { flex: 0 0 auto; min-width: 38px; }
+    .field-nudges #playResultButton { margin-left: auto; color: #fff; background: var(--pine); }
+    .field-nudge-label { color: var(--muted); font-size: 11px; margin-right: 2px; }
+    .result-options { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 18px 10px; }
+    .result-options .clock-step { flex: 1 1 auto; font-size: 12px; min-height: 34px; }
+    .result-options .clock-step[aria-pressed="true"] { color: #fff; background: var(--pine); }
+    .restart-dialog .result-field { display: grid; gap: 4px; padding: 0 18px 10px; font-size: 12px; color: var(--muted); }
+    .restart-dialog .result-field input { max-width: 120px; }
+    .mini-field { padding: 0 18px 10px; }
+    .mini-field .field-track { height: 46px; background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(255,255,255,.36) calc(10% - 1px) 10%), var(--field-dark); cursor: pointer; }
+    .mini-field .ball-marker { width: 44px; height: 24px; font-size: 12px; }
+    .mini-field .ball-marker::before { left: 7px; }
+    .mini-field .ball-marker::after { right: 7px; }
+    .mini-start { position: absolute; z-index: 1; top: 4px; bottom: 4px; left: 25%; width: 2px; background: #fff; opacity: .8; pointer-events: none; }
+    .mini-start::before { position: absolute; top: -1px; left: 50%; transform: translateX(-50%); padding: 0 3px; border-radius: 2px; color: #123; background: #fff; content: "START"; font-size: 7px; font-weight: 800; }
+    .mini-field .field-nudges { margin-top: 4px; }
+    .restart-dialog .result-heading { padding: 4px 18px 6px; border: 0; font-size: 12px; font-weight: 700; color: var(--muted); }
     .clock-step.ready { border-color: #8b4513; color: #fff; background: #f28c28; }
     .board-direct-edit { width: 74px; min-height: 30px; padding: 3px 6px; text-align: right; font-variant-numeric: tabular-nums; }
     .board-quarter-edit { width: 76px; min-height: 30px; padding: 3px 6px; }
@@ -162,10 +196,22 @@
     .board-links { display: grid; gap: 8px; }
     .board-links a { color: var(--pine); font-size: 12px; font-weight: 700; text-underline-offset: 3px; }
     .board-note { margin: 0; color: var(--muted); font-size: 11px; }
+    .link-button { background: none; border: 0; padding: 0 0 0 6px; color: var(--muted); text-decoration: underline; font-size: 11px; cursor: pointer; min-height: 0; }
+    .board-matrix td { cursor: pointer; }
+    .matrix-caption { margin: 0 0 6px; color: var(--muted); font-size: 12px; font-weight: 600; }
+    .board-matrix td { transition: background .1s ease, box-shadow .1s ease; }
+    .board-matrix td:hover { background: #fdf0c4; box-shadow: inset 0 0 0 2px #d9862c88; }
+    .board-matrix td:active { background: #f5d57b; transform: scale(.97); }
+    .board-matrix td.selected:hover { background: #f5d57b; box-shadow: none; }
     .alignment-range-key { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
     .alignment-range { display: inline-flex; align-items: baseline; gap: 5px; padding: 4px 7px; border: 1px solid var(--line); border-radius: 3px; color: var(--muted); background: #fff; font-size: 10px; }
     .alignment-range strong { color: var(--ink); font-size: 11px; }
     .alignment-range.active { border-color: var(--field); color: var(--ink); background: var(--mint); box-shadow: inset 0 0 0 1px var(--field); }
+    .index-total { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0 0 10px; padding: 7px 10px; border: 1px solid var(--field); border-radius: 3px; color: var(--ink); background: var(--mint); box-shadow: inset 0 0 0 1px var(--field); font-size: 12px; }
+    .index-total .index-total-value { font-variant-numeric: tabular-nums; }
+    .index-total strong { font-size: 15px; }
+    .index-total .index-total-range { color: var(--muted); font-size: 11px; }
+    .index-formula { margin: 0 0 4px; color: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
     .fac-tool { display: grid; gap: 10px; margin: 15px 0; padding: 12px; border: 1px solid var(--line); border-radius: 4px; background: #f7faf5; }
     .fac-tool-head, .fac-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
     .fac-tool-head { justify-content: space-between; }
@@ -323,8 +369,16 @@
             <div class="field-track" id="fieldTrack"><div class="field-line-to-gain" id="lineToGain" aria-hidden="true"></div><div class="ball-marker" id="ballMarker" role="slider" tabindex="0" aria-label="Draggable ball position" aria-valuemin="1" aria-valuemax="99" aria-valuenow="25">25</div></div>
             <div class="field-caption"><span id="visitorDirection">Visitors attack right</span><span id="fieldPositionCaption">Position shown from possession</span><span id="homeDirection">Home attacks left</span></div>
           </div>
+          <div class="field-nudges" role="group" aria-label="Move the ball toward the opponent's goal (+) or your own (−)">
+            <span class="field-nudge-label">Move ball</span>
+            <button class="clock-step" type="button" data-nudge="1">+1</button><button class="clock-step" type="button" data-nudge="5">+5</button><button class="clock-step" type="button" data-nudge="10">+10</button><button class="clock-step" type="button" data-nudge="-1">−1</button><button class="clock-step" type="button" data-nudge="-5">−5</button><button class="clock-step" type="button" data-nudge="-10">−10</button>
+            <button class="clock-step" id="playResultButton" type="button" title="Enter a play's result and update the ball, down, distance and clock">Play result</button>
+            <button class="clock-step" id="undoPlayButton" type="button" disabled title="Undo the most recent Play result (and anything changed after it)">↶ Undo play result</button>
+            <button class="clock-step" id="undoButton" type="button" disabled title="Undo the last game-state change or recorded drive">↶ Undo last action</button>
+          </div>
         </section>
         <div class="tabletop-columns">
+          <div class="board-column">
           <section class="board-area">
             <h3>Game state</h3>
             <div class="board-control-grid">
@@ -333,9 +387,9 @@
                 <input class="board-slider" id="boardQuarter" type="range" min="1" max="4" step="1" value="1" aria-label="Quarter slider">
               </div>
               <div class="board-control">
-                <div class="board-control-head"><label for="boardClock">Time left</label><input class="board-direct-edit" id="boardClockText" type="text" value="15:00" inputmode="numeric" maxlength="5" pattern="[0-1][0-9]:[0-5][0-9]" aria-label="Edit time remaining as minutes and seconds"></div>
-                <div class="clock-step-actions"><button class="clock-step" id="clockMinusForty" type="button" aria-label="Subtract 40 seconds">-:40 sec</button><button class="clock-step" id="clockMinusTen" type="button" aria-label="Subtract 10 seconds">-:10 sec</button><button class="clock-step" id="clockMinusMinute" type="button" aria-label="Subtract one minute">- 1 min</button><button class="clock-step" id="clockPlusMinute" type="button" aria-label="Add one minute">+ 1 min</button></div>
-                <input class="board-slider" id="boardClock" type="range" min="0" max="900" step="10" value="900" aria-label="Quarter clock slider">
+                <div class="board-control-head"><label for="boardClock">Time left</label><input class="board-direct-edit" id="boardClockText" type="text" value="15:00" inputmode="numeric" maxlength="5" pattern="(?:0[0-9]|1[0-5]):[0-5][0-9]" aria-label="Edit time remaining as minutes and seconds"></div>
+                <div class="clock-step-actions"><button class="clock-step" id="clockMinusForty" type="button" aria-label="Subtract 40 seconds">-:40 sec</button><button class="clock-step" id="clockMinusTwenty" type="button" aria-label="Subtract 20 seconds">-:20 sec</button><button class="clock-step" id="clockMinusTen" type="button" aria-label="Subtract 10 seconds">-:10 sec</button><button class="clock-step" id="clockMinusMinute" type="button" aria-label="Subtract one minute">- 1 min</button><button class="clock-step" id="clockPlusMinute" type="button" aria-label="Add one minute">+ 1 min</button></div>
+                <input class="board-slider" id="boardClock" type="range" min="0" max="900" step="1" value="900" aria-label="Quarter clock slider">
               </div>
               <div class="board-control">
                 <label>Down</label>
@@ -349,31 +403,49 @@
               <div class="board-control">
                 <label for="boardDistance">Yards to go</label>
                 <input id="boardDistance" type="number" min="1" max="99" value="10" aria-label="Yards to go">
-                <button class="clock-step" id="firstDownButton" type="button">1st & 10</button>
+                <button class="clock-step" id="firstDownButton" type="button">Reset to 1st & 10</button>
               </div>
               <div class="board-control">
                 <label for="boardYardLine"><span id="boardYardLineLabel">Visitor yard line</span><output id="boardYardLineDisplay">VIS 25</output></label>
                 <input id="boardYardLine" type="number" min="1" max="99" value="25" aria-label="Visitor field position">
               </div>
-              <div class="board-control">
-                <label for="boardVisitorOffIndex"><span id="visitorOffLabel">Visitor OFF index</span></label>
-                <input id="boardVisitorOffIndex" type="number" min="-20" max="20" value="0" aria-label="Visitor offensive index">
-              </div>
-              <div class="board-control">
-                <label for="boardVisitorDefIndex"><span id="visitorDefLabel">Visitor DEF index</span></label>
-                <input id="boardVisitorDefIndex" type="number" min="-20" max="20" value="0" aria-label="Visitor defensive index">
-              </div>
-              <div class="board-control">
-                <label for="boardHomeOffIndex"><span id="homeOffLabel">Home OFF index</span></label>
-                <input id="boardHomeOffIndex" type="number" min="-20" max="20" value="4" aria-label="Home offensive index">
-              </div>
-              <div class="board-control full">
-                <label for="boardHomeDefIndex"><span id="homeDefLabel">Home DEF index</span> <output id="boardCombinedIndex">Visitors +2 · Home +4</output></label>
-                <input id="boardHomeDefIndex" type="number" min="-20" max="20" value="2" aria-label="Home defensive index">
-              </div>
             </div>
+          </section>
+
+          <section class="board-area" aria-label="Team indexes">
+            <h3>Team indexes</h3>
+            <details class="team-indexes" id="teamIndexes">
+              <summary>Adjusted: <output id="boardCombinedIndex">Visitors +2 · Home +4</output></summary>
+              <div class="board-control-grid">
+                <div class="board-control">
+                  <label for="boardVisitorOffIndex"><span id="visitorOffLabel">Visitor OFF index</span></label>
+                  <input id="boardVisitorOffIndex" type="number" min="-20" max="20" value="0" aria-label="Visitor offensive index">
+                </div>
+                <div class="board-control">
+                  <label for="boardVisitorDefIndex"><span id="visitorDefLabel">Visitor DEF index</span></label>
+                  <input id="boardVisitorDefIndex" type="number" min="-20" max="20" value="0" aria-label="Visitor defensive index">
+                </div>
+                <div class="board-control">
+                  <label for="boardHomeOffIndex"><span id="homeOffLabel">Home OFF index</span></label>
+                  <input id="boardHomeOffIndex" type="number" min="-20" max="20" value="4" aria-label="Home offensive index">
+                </div>
+                <div class="board-control">
+                  <label for="boardHomeDefIndex"><span id="homeDefLabel">Home DEF index</span></label>
+                  <input id="boardHomeDefIndex" type="number" min="-20" max="20" value="2" aria-label="Home defensive index">
+                </div>
+              </div>
+            </details>
+          </section>
+
+          <section class="board-area" aria-label="Defensive strategy FAC">
+            <h3>Defensive strategy FAC</h3>
+            <div class="fac-card-list" id="strategyFacCard" aria-live="polite"></div>
+          </section>
+
+          <section class="board-area">
             <div class="actual-rolls" aria-label="Actual play dice">
-              <div class="actual-roll-head"><strong>Actual play rolls</strong><button class="secondary actual-roll-button" id="rollAllActualDice" type="button">Roll all five sets</button></div>
+              <div class="actual-roll-head"><button class="roll-toggle" id="actualRollsToggle" type="button"               aria-expanded="false" aria-controls="actualRollRows">Roll for Plays, Yards, Etc.</button><button class="secondary actual-roll-button" id="rollAllActualDice" type="button">Roll all five sets</button></div>
+                            <div id="actualRollRows" hidden>
               <div class="actual-roll-row">
                 <span class="actual-roll-title">Off Play</span>
                 <div class="actual-roll-faces"><div class="matrix-die mini red" id="actualOffRed" role="img"></div><div class="matrix-die mini white" id="actualOffWhite" role="img"></div><div class="matrix-die mini blue" id="actualOffBlue" role="img"></div></div>
@@ -399,18 +471,16 @@
                 <div class="actual-roll-faces"><div class="matrix-die mini red" id="actualExtraRed" role="img"></div><div class="matrix-die mini white" id="actualExtraWhite" role="img"></div><div class="matrix-die mini blue" id="actualExtraBlue" role="img"></div></div>
                 <button class="secondary actual-roll-button" id="rollActualExtra" type="button">Roll</button>
               </div>
+              </div>
             </div>
           </section>
+          </div>
 
           <section class="board-area">
-            <h3 id="boardMatrixTitle">Starters play-call matrix</h3>
-            <div class="matrix-dice" aria-label="Play-call dice">
-              <div class="matrix-die-group"><span class="matrix-die-label">Red · column</span><div class="matrix-die red" id="redDieFace" role="img" aria-label="Red die shows 4"></div></div>
-              <div class="matrix-die-group"><span class="matrix-die-label">White · row</span><div class="matrix-die white" id="whiteDieFace" role="img" aria-label="White die shows 1"></div></div>
-              <div class="matrix-die-group"><span class="matrix-die-label">Blue · strategy</span><div class="matrix-die blue" id="blueDieFace" role="img" aria-label="Blue die shows 1"></div></div>
-              <button class="secondary" id="rollPlayDiceButton" type="button">Roll play-call dice</button>
-            </div>
             <div class="board-control-grid">
+              <details class="dice-sliders" id="diceSliders">
+                            <summary>Enter Dice Results Manually</summary>
+              <div class="board-control-grid">
               <div class="board-control">
                 <label for="boardColumn">Red die · column <output id="boardColumnValue">4</output></label>
                 <input class="board-slider" id="boardColumn" type="range" min="1" max="6" step="1" value="4" aria-label="Red die column slider">
@@ -423,7 +493,8 @@
                 <label for="boardBlueDie">Blue die · strategy <output id="boardBlueDieValue">1</output></label>
                 <input class="board-slider" id="boardBlueDie" type="range" min="1" max="6" step="1" value="1" aria-label="Blue die strategy slider">
               </div>
-              <div class="board-control full">
+                              </div>
+                              </details>              <div class="board-control full">
                 <label for="boardStrategy">Defensive alignment</label>
                 <select id="boardStrategy"><option value="Automatic">Suggested from OFF index</option><option value="Short">Short (3rd/4th &amp; 1, 1-2 yard lines)</option><option value="Run">Run (9 or less)</option><option value="Starters">Starters (10-19)</option><option value="Nickel">Nickel (20-29)</option><option value="Dime">Dime (30+)</option></select>
                 <div class="alignment-range-key" aria-label="Suggested defense alignment ranges">
@@ -435,18 +506,22 @@
                 </div>
               </div>
             </div>
+            <p class="matrix-caption">🎲 Roll the dice, or tap any square to set the play yourself.</p>
             <div class="board-matrix-wrap"><table class="board-matrix" id="boardMatrix" aria-label="Inside Blitz play call matrix"></table></div>
-            <div class="board-play-result"><span>Selected play · <span id="boardDiceText">4-1-1</span></span><strong id="boardPlayCall">QP</strong></div>
-            <div class="board-play-result"><span>Blue-die strategy</span><strong id="boardStrategyValue">Key</strong></div>
+            <p class="board-note">Tap a square to highlight it. <button class="link-button" id="clearPickButton" type="button" hidden>Clear highlight</button></p>
+            <div class="board-play-result"><span>Selected play · <span id="boardDiceText">none picked</span></span><strong id="boardPlayCall">—</strong></div>
+            <div class="board-play-result"><span>Blue-die strategy</span><strong id="boardStrategyValue">—</strong></div>
           </section>
 
           <section class="board-area refs-area">
-            <h3>Printed references</h3>
-            <div class="board-links">
-              <a href="IB%20CHART%20V3.pdf" target="_blank" rel="noreferrer">Lookup, penalty and injury charts</a>
-              <a href="IB%20-%20Game%20Rules%20v3.pdf" target="_blank" rel="noreferrer">Game rules and solitaire calls</a>
-              <a href="IB%202009%20NFL.pdf" target="_blank" rel="noreferrer">2009 team cards</a>
-              <a href="FAC%20PDF.pdf" target="_blank" rel="noreferrer">FAC cards</a>
+            <h3 id="boardMatrixTitle">Starters play-call matrix</h3>
+            <p class="index-formula" id="boardIndexFormula"></p>
+            <div class="index-total" id="boardIndexTotal" aria-live="polite"></div>
+            <div class="matrix-dice" aria-label="Play-call dice">
+              <div class="matrix-die-group"><span class="matrix-die-label">Red · column</span><div class="matrix-die red" id="redDieFace" role="img" aria-label="Red die shows 4"></div></div>
+              <div class="matrix-die-group"><span class="matrix-die-label">White · row</span><div class="matrix-die white" id="whiteDieFace" role="img" aria-label="White die shows 1"></div></div>
+              <div class="matrix-die-group"><span class="matrix-die-label">Blue · strategy</span><div class="matrix-die blue" id="blueDieFace" role="img" aria-label="Blue die shows 1"></div></div>
+              <button class="secondary" id="rollPlayDiceButton" type="button">Roll play-call dice</button>
             </div>
             <div class="fac-tool">
               <div class="fac-tool-head"><strong>FAC deck</strong><span class="fac-tool-status" id="facDeckStatus" role="status">Loading numbered FACs...</span></div>
@@ -459,7 +534,6 @@
               </div>
               <div class="fac-card-list" id="facCards" aria-live="polite"></div>
             </div>
-            <p class="board-note" id="boardAlignmentNote">Suggested alignment uses down × yards-to-go plus the combined team index. Short alignment applies on 3rd/4th and 1, or at the 1-2 yard line.</p>
           </section>
         </div>
         <p class="board-note">Move the black sliders to set the board. Record the current team's score and clock when ending its drive.</p>
@@ -593,6 +667,54 @@
       <button class="primary" id="confirmDriveButton" type="button">Confirm &amp; Simulate</button>
     </div>
   </dialog>
+  <dialog class="restart-dialog" id="recordConfirmDialog" aria-labelledby="recordConfirmTitle" aria-describedby="recordConfirmUpdate recordConfirmResult">
+    <h2 id="recordConfirmTitle">Record this drive and switch possession?</h2>
+    <p id="recordConfirmUpdate"></p>
+    <p id="recordConfirmResult"></p>
+    <div class="restart-actions">
+      <button class="secondary" id="cancelRecordButton" type="button">Cancel</button>
+      <button class="primary" id="confirmRecordButton" type="button">Confirm &amp; Record</button>
+    </div>
+  </dialog>
+  <dialog class="restart-dialog" id="playResultDialog" aria-labelledby="playResultTitle" aria-describedby="playResultPreview">
+    <h2 id="playResultTitle">Play result</h2>
+    <p class="result-heading">What happened?</p>
+    <div class="result-options" role="group" aria-label="Play result type">
+      <button class="clock-step" type="button" data-result-kind="play" aria-pressed="true">Run / Pass</button>
+      <button class="clock-step" type="button" data-result-kind="incomplete" aria-pressed="false">Incomplete</button>
+      <button class="clock-step" type="button" data-result-kind="loss" aria-pressed="false">Sack / Loss</button>
+      <button class="clock-step" type="button" data-result-kind="touchdown" aria-pressed="false">Touchdown</button>
+      <button class="clock-step" type="button" data-result-kind="turnover" aria-pressed="false">Turnover</button>
+    </div>
+    <div class="result-field" id="playResultYardsControl">
+      <label for="playResultYards" id="playResultYardsLabel">Yards gained</label>
+      <input id="playResultYards" type="number" min="-99" max="99" step="1" placeholder="0">
+    </div>
+    <div class="mini-field" id="miniField">
+      <div class="field-wrap">
+        <div class="field-labels"><span id="miniVisitorGoal"></span><span>Midfield</span><span id="miniHomeGoal"></span></div>
+        <div class="field-track" id="miniTrack"><div class="mini-start" id="miniStart" title="Starting spot"></div><div class="field-line-to-gain" id="miniGain" aria-hidden="true"></div><div class="ball-marker" id="miniBall" role="slider" tabindex="0" aria-label="Drag to set where the play ends" aria-valuemin="1" aria-valuemax="100">25</div></div>
+        <div class="field-caption"><span id="miniCaption"></span></div>
+      </div>
+      <div class="field-nudges" role="group" aria-label="Move the end of the play">
+        <span class="field-nudge-label">Move ball</span>
+        <button class="clock-step" type="button" data-mini-nudge="1">+1</button><button class="clock-step" type="button" data-mini-nudge="5">+5</button><button class="clock-step" type="button" data-mini-nudge="10">+10</button><button class="clock-step" type="button" data-mini-nudge="-1">−1</button><button class="clock-step" type="button" data-mini-nudge="-5">−5</button><button class="clock-step" type="button" data-mini-nudge="-10">−10</button>
+      </div>
+    </div>
+    <p class="result-heading">Clock used</p>
+    <div class="result-options" role="group" aria-label="Clock used">
+      <button class="clock-step" type="button" data-result-seconds="0" aria-pressed="false">None</button>
+      <button class="clock-step" type="button" data-result-seconds="10" aria-pressed="false">-:10 sec</button>
+      <button class="clock-step" type="button" data-result-seconds="20" aria-pressed="false">-:20 sec</button>
+      <button class="clock-step" type="button" data-result-seconds="40" aria-pressed="true">-:40 sec</button>
+      <button class="clock-step" type="button" data-result-seconds="60" aria-pressed="false">- 1 min</button>
+    </div>
+    <p id="playResultPreview"></p>
+    <div class="restart-actions">
+      <button class="secondary" id="cancelPlayResultButton" type="button">Cancel &amp; enter manually</button>
+      <button class="primary" id="confirmPlayResultButton" type="button">Confirm</button>
+    </div>
+  </dialog>
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
@@ -701,7 +823,18 @@
       Run: ["Key", "Run", "No", "Blitz", "Man", "Zone"],
       Starters: ["Key", "Run", "No", "Blitz", "Man", "Zone"],
       Nickel: ["No", "No", "Blitz", "Man", "Zone", "Pre"],
-      Dime: ["No", "Blitz", "Man", "Zone", "Pre", "Pre"]
+      Dime: ["No", "Blitz", "Man", "Zone", "Pre", "Pre"],
+    };
+
+    const strategyFacCards = {
+      rows: ["Runs", "Quick Pass", "Short Pass", "Medium Pass", "Long Pass", "Pass Rush"],
+      No: { title: "Strategy FAC · No Strategy", values: [[0, 0], [0, 0], [0, 0], [0, 0], [0, 0], [0, 0]] },
+      Run: { title: "Strategy FAC · Run No Key", values: [[1, -1], [1, -1], [0, 0], [-1, 1], [-2, 2], [0, 0]] },
+      Key: { title: "Strategy FAC · Run Key", values: [[2, -2], [1, -1], [0, 0], [-1, 1], [-2, 2], [0, 0]] },
+      Blitz: { title: "Strategy FAC · Blitz", values: [[-3, 3], [0, 0], [0, 0], [0, 0], [0, 0], [3, 3]] },
+      Zone: { title: "Strategy FAC · Pass / Zone", values: [[-1, 1], [-1, 1], [0, 0], [1, -1], [1, -1], [0, 0]] },
+      Man: { title: "Strategy FAC · Pass / Man to Man", values: [[-1, 1], [1, -1], [2, -2], [0, 0], [-1, 1], [0, 0]] },
+      Pre: { title: "Strategy FAC · Pass / Prevent", values: [[-2, 2], [-1, 1], [0, 0], [1, -1], [2, -2], [0, 0]] }
     };
 
     let teamProfiles = {};
@@ -769,6 +902,8 @@
       state.tabletop.column = roll(1, 6);
       state.tabletop.row = roll(1, 6);
       state.tabletop.blueDie = roll(1, 6);
+      state.tabletop.pickedPlay = true;
+      state.tabletop.pickedBlue = true;
       render();
     }
 
@@ -825,7 +960,7 @@
       $("boardRowValue").textContent = board.row;
       const firstDownMade = board.gainLine != null && board.yardLine >= board.gainLine;
       $("firstDownButton").classList.toggle("ready", firstDownMade);
-      $("firstDownButton").textContent = firstDownMade ? "First down! Reset to 1st & 10" : "1st & 10";
+      $("firstDownButton").textContent = firstDownMade ? "First down! Reset to 1st & 10" : "Reset to 1st & 10";
       $("boardBlueDieValue").textContent = board.blueDie;
       renderDie("redDieFace", "Red", board.column);
       renderDie("whiteDieFace", "White", board.row);
@@ -838,6 +973,8 @@
       $("homeOffLabel").textContent = `${homeProfile.abbreviation} OFF index`;
       $("homeDefLabel").textContent = `${homeProfile.abbreviation} DEF index`;
       $("boardYardLineDisplay").textContent = formatFieldSpot(offense, board.yardLine);
+      $("undoButton").disabled = undoStack.length === 0;
+      $("undoPlayButton").disabled = !undoStack.some((entry) => entry.kind === "play");
       const visitorMatchIndex = board.visitorOffIndex + board.homeDefIndex;
       const homeMatchIndex = board.homeOffIndex + board.visitorDefIndex;
       const visitorIndexLabel = visitorMatchIndex >= 0 ? `+${visitorMatchIndex}` : `${visitorMatchIndex}`;
@@ -855,12 +992,27 @@
       const alignment = board.alignment === "Automatic" ? suggested : board.alignment;
       const matrix = playMatrices[alignment];
       const strategies = strategyRows[alignment];
-      $("boardMatrixTitle").textContent = `${alignment} play-call matrix · ${board.down} × ${board.distance} ${selectedIndexLabel}`;
-      $("boardAlignmentNote").textContent = `${alignment === suggested ? "Suggested" : "Selected"} alignment: ${alignment}. ${teamName(offense)} formula: down × yards-to-go + offense OFF + opposing DEF = ${selectedIndexLabel}. Matchup indices: ${visitorProfile.abbreviation} ${visitorIndexLabel} · ${homeProfile.abbreviation} ${homeIndexLabel}.`;
-      $("boardStrategyValue").textContent = strategies[board.blueDie - 1];
-      $("boardDiceText").textContent = `${board.column}-${board.row}-${board.blueDie}`;
-      $("boardPlayCall").textContent = matrix[board.row - 1][board.column - 1];
-      $("boardMatrix").innerHTML = `<thead><tr><th>Row / Col</th>${[1, 2, 3, 4, 5, 6].map((column) => `<th>${column}</th>`).join("")}</tr></thead><tbody>${matrix.map((row, rowIndex) => `<tr><th>${rowIndex + 1}</th>${row.map((call, columnIndex) => `<td class="${rowIndex + 1 === board.row && columnIndex + 1 === board.column ? "selected" : ""}">${call}</td>`).join("")}</tr>`).join("")}</tbody><tfoot><tr><th>Blue strategy</th>${strategies.map((strategy, index) => `<td class="${index + 1 === board.blueDie ? "selected" : ""}">${strategy}</td>`).join("")}</tr></tfoot>`;
+      const indexTotal = board.down * board.distance + selectedIndex;
+      const alignmentRanges = { Short: "3rd/4th & 1, or 1-2 yard line", Run: "9 or less", Starters: "10-19", Nickel: "20-29", Dime: "30+" };
+      $("boardMatrixTitle").textContent = `${alignment} play-call matrix`;
+      const signed = (value) => (value >= 0 ? `+ ${value}` : `− ${Math.abs(value)}`);
+      const offenseIsHome = offense === state.matchup.home;
+      const offIndex = offenseIsHome ? board.homeOffIndex : board.visitorOffIndex;
+      const defIndex = offenseIsHome ? board.visitorDefIndex : board.homeDefIndex;
+      $("boardIndexFormula").textContent = `Down ${board.down} × Yards ${board.distance} ${signed(offIndex)} (offense OFF) ${signed(defIndex)} (opposing DEF)`;
+      $("boardIndexTotal").innerHTML = `<span class="index-total-value">${indexTotal}</span><span>→</span><strong>${alignment}</strong><span class="index-total-range">(${alignmentRanges[alignment]})</span>`;
+      const picked = Boolean(board.picked);
+      const pickedPlay = Boolean(board.pickedPlay);
+      const pickedBlue = Boolean(board.pickedBlue);
+      $("boardStrategyValue").textContent = pickedBlue ? strategies[board.blueDie - 1] : "—";
+      const strategyCard = strategyFacCards[strategies[board.blueDie - 1]];
+      $("strategyFacCard").innerHTML = pickedBlue
+        ? `<article class="fac-card"><h4>${strategyCard.title}</h4><pre>${["          DEF  OFF", ...strategyFacCards.rows.map((label, index) => `${label.padEnd(11)} ${strategyCard.values[index].map((value) => (value > 0 ? `+${value}` : value < 0 ? `−${Math.abs(value)}` : "0").padStart(3)).join("  ")}`)].join("\n")}</pre></article>`
+        : `<p class="board-note">Roll the dice, enter them, or tap a blue-strategy square to show the strategy card.</p>`;
+      $("boardDiceText").textContent = pickedPlay ? `${board.column}-${board.row}` : "none picked";
+      $("boardPlayCall").textContent = pickedPlay ? matrix[board.row - 1][board.column - 1] : "—";
+      $("clearPickButton").hidden = !(pickedPlay || pickedBlue);
+      $("boardMatrix").innerHTML = `<thead><tr><th>Row / Col</th>${[1, 2, 3, 4, 5, 6].map((column) => `<th>${column}</th>`).join("")}</tr></thead><tbody>${matrix.map((row, rowIndex) => `<tr><th>${rowIndex + 1}</th>${row.map((call, columnIndex) => `<td data-row="${rowIndex + 1}" data-column="${columnIndex + 1}" class="${pickedPlay && rowIndex + 1 === board.row && columnIndex + 1 === board.column ? "selected" : ""}">${call}</td>`).join("")}</tr>`).join("")}</tbody><tfoot><tr><th>Blue strategy</th>${strategies.map((strategy, index) => `<td data-blue="${index + 1}" class="${pickedBlue && index + 1 === board.blueDie ? "selected" : ""}">${strategy}</td>`).join("")}</tr></tfoot>`;
     }
 
     function syncTabletopFromGame() {
@@ -886,32 +1038,281 @@
       if (board.gainLine != null) board.distance = clamp(Math.round(board.gainLine - board.yardLine), 1, 99);
     }
 
+    function tabletopInputError(input) {
+      if (input.id === "boardClockText") {
+        const match = input.value.match(/^(\d{2}):(\d{2})$/);
+        if (!match) return "Enter time as MM:SS, from 00:00 to 15:00.";
+        const seconds = Number(match[1]) * 60 + Number(match[2]);
+        return Number(match[2]) <= 59 && seconds <= 900 ? "" : "Enter time from 00:00 to 15:00.";
+      }
+      if (input.type !== "number" && input.type !== "range" && input.id !== "boardQuarterSelect") {
+        return input.validity.valid ? "" : `Choose a valid ${input.getAttribute("aria-label") || "value"}.`;
+      }
+      const value = input.value.trim() === "" ? NaN : Number(input.value);
+      const min = input.id === "boardQuarterSelect" ? 1 : Number(input.min);
+      const max = input.id === "boardQuarterSelect" ? 4 : Number(input.max);
+      if (!Number.isSafeInteger(value) || value < min || value > max) {
+        return `Enter a whole number from ${min} to ${max} for ${input.getAttribute("aria-label") || "this field"}.`;
+      }
+      return "";
+    }
+
+    function validateTabletopInputs() {
+      for (const inputId of Object.keys(tabletopInputKeys)) {
+        const input = $(inputId);
+        const error = tabletopInputError(input);
+        input.setCustomValidity(error);
+        if (error) {
+          input.reportValidity();
+          notify(error);
+          return false;
+        }
+      }
+      return true;
+    }
+
     function updateTabletopInput(event) {
-      const inputId = event.currentTarget.id;
+      const input = event.currentTarget;
+      const inputId = input.id;
       const key = tabletopInputKeys[inputId];
-      let value = event.currentTarget.type === "number" || event.currentTarget.type === "range" || inputId === "boardQuarterSelect" ? Number(event.currentTarget.value) : event.currentTarget.value;
+      if (event.type === "input" && input.type !== "range" && input.tagName !== "SELECT") {
+        input.setCustomValidity("");
+        return;
+      }
+      const error = tabletopInputError(input);
+      input.setCustomValidity(error);
+      if (error) {
+        input.reportValidity();
+        notify(error);
+        return;
+      }
+      let value = input.type === "number" || input.type === "range" || inputId === "boardQuarterSelect" ? Number(input.value) : input.value;
       if (inputId === "boardClockText") {
-        const match = String(value).match(/^(\d{1,2}):(\d{2})$/);
-        if (!match || Number(match[2]) > 59) return;
+        const match = String(value).match(/^(\d{2}):(\d{2})$/);
         value = clamp(Number(match[1]) * 60 + Number(match[2]), 0, 900);
       }
       if (inputId === "boardYardLine") {
-        value = clamp(Math.round(value), 1, 50);
         if (state.tabletop.yardLine > 50) value = 100 - value;
       }
-      if (key === "visitorScore" || key === "homeScore") value = clamp(Math.round(value), 0, 99);
-      if (key === "distance") value = clamp(Math.round(value), 1, 99);
+      if (key !== "column" && key !== "row" && key !== "blueDie") pushUndo();
       if (inputId === "boardYardLine") pinGainLine();
       if (key === "distance") state.tabletop.gainLine = null;
       state.tabletop[key] = value;
+      if (key === "column" || key === "row") state.tabletop.pickedPlay = true;
+      if (key === "blueDie") state.tabletop.pickedBlue = true;
       if (inputId === "boardYardLine") updateDistanceFromLine();
       if (inputId === "boardYardLine" && (!state.started || !state.gameOver)) state.ball = clamp(value, 1, 99);
       render();
     }
 
     function adjustTabletopClock(seconds) {
+      pushUndo();
       state.tabletop.clock = clamp(state.tabletop.clock + seconds, 0, 900);
       render();
+    }
+
+    const undoStack = [];
+    let suppressUndo = false;
+    const undoKeys = ["started", "gameOver", "startMode", "quarter", "clock", "possession", "ball", "score", "driveNumber", "driveNumbers", "elapsedGameSeconds", "driveStartElapsed", "tabletop", "entries", "secondHalfOpener", "overtime", "overtimeFirstScore", "timeouts", "possessionReset"];
+
+    function takeSnapshot() {
+      const snapshot = { nextStartSide: $("nextStartSide").value };
+      for (const key of undoKeys) snapshot[key] = structuredClone(state[key]);
+      return snapshot;
+    }
+
+    function restoreSnapshot(snapshot) {
+      const { column, row, blueDie, alignment, pickedPlay, pickedBlue } = state.tabletop;
+      for (const key of undoKeys) state[key] = structuredClone(snapshot[key]);
+      Object.assign(state.tabletop, { column, row, blueDie, alignment, pickedPlay, pickedBlue });
+      $("nextStartSide").value = snapshot.nextStartSide;
+    }
+
+    function pushUndo(kind = "action") {
+      if (suppressUndo) return;
+      undoStack.push({ kind, snapshot: takeSnapshot() });
+      if (undoStack.length > 50) undoStack.shift();
+    }
+
+    function undoLastAction() {
+      const entry = undoStack.pop();
+      if (!entry) return;
+      restoreSnapshot(entry.snapshot);
+      render();
+      notify("Last action undone.");
+    }
+
+    function undoPlayResult() {
+      const index = undoStack.map((entry) => entry.kind).lastIndexOf("play");
+      if (index < 0) return;
+      const [entry] = undoStack.splice(index);
+      restoreSnapshot(entry.snapshot);
+      render();
+      notify("Play result undone.");
+    }
+
+    const playResult = { kind: "play", seconds: 40 };
+    const playResultDefaults = { play: 40, loss: 40, incomplete: 0, touchdown: 40, turnover: 40 };
+
+    function computePlayResult() {
+      const board = state.tabletop;
+      const role = state.possession;
+      const team = state.matchup[role];
+      const rawYards = Math.round(Number($("playResultYards").value) || 0);
+      const seconds = playResult.seconds;
+      const clock = Math.max(0, board.clock - seconds);
+      let kind = playResult.kind;
+      let note = "";
+      let newLine = board.yardLine;
+      if (kind === "play" || kind === "loss") {
+        newLine = board.yardLine + (kind === "loss" ? -Math.abs(rawYards) : rawYards);
+        if (newLine >= 100) {
+          kind = "touchdown";
+          note = " (the ball reaches the end zone)";
+        } else {
+          newLine = clamp(newLine, 1, 99);
+        }
+      }
+      const out = { kind, role, team, clock, seconds, handoff: null, down: board.down, distance: board.distance, yardLine: board.yardLine, gainLine: board.gainLine, firstDown: false };
+      const gainLine = board.gainLine ?? clamp(board.yardLine + board.distance, 1, 100);
+      const advanceDown = () => {
+        out.down = board.down + 1;
+        if (out.down > 4) out.handoff = "downs";
+      };
+      if (kind === "touchdown") {
+        out.handoff = "touchdown";
+      } else if (kind === "turnover") {
+        out.handoff = "turnover";
+      } else if (kind === "incomplete") {
+        advanceDown();
+      } else {
+        out.yardLine = newLine;
+        if (newLine >= gainLine) {
+          out.firstDown = true;
+          out.down = 1;
+          out.distance = Math.min(10, 100 - newLine);
+          out.gainLine = null;
+        } else {
+          out.gainLine = gainLine;
+          out.distance = clamp(gainLine - newLine, 1, 99);
+          advanceDown();
+        }
+      }
+      const clockLabel = `${clockText(clock)} left`;
+      if (out.handoff) {
+        const nextRole = other(role);
+        const nextSpot = nextTeamStartingSpot(nextRole);
+        const label = { touchdown: "Touchdown (+6)", turnover: "Turnover", downs: "Turnover on downs" }[out.handoff];
+        out.text = `${label}${note}. ${teamName(state.matchup[nextRole])} ball at ${formatFieldSpot(nextRole, nextSpot)}, 1st & ${Math.min(10, 100 - nextSpot)}; ${clockLabel}. The drive is logged.`;
+      } else {
+        const downText = out.firstDown ? `1st & ${out.distance} (first down)` : `${ordinal(out.down)} & ${out.distance}`;
+        out.text = `${teamName(team)} ball at ${formatFieldSpot(team, out.yardLine)}, ${downText}; ${clockLabel}.`;
+      }
+      return out;
+    }
+
+    function projectedLine() {
+      const raw = Math.round(Number($("playResultYards").value) || 0);
+      return clamp(state.tabletop.yardLine + (playResult.kind === "loss" ? -Math.abs(raw) : raw), 1, 100);
+    }
+
+    function setProjectedLine(line) {
+      const delta = clamp(Math.round(line), 1, 100) - state.tabletop.yardLine;
+      playResult.kind = delta < 0 ? "loss" : "play";
+      $("playResultYards").value = Math.abs(delta);
+      renderPlayResultDialog();
+    }
+
+    function renderMiniField() {
+      const board = state.tabletop;
+      const fieldTeam = state.matchup[state.possession];
+      const homeSide = fieldTeam === state.matchup.home;
+      const pos = (yards) => `${clamp(homeSide ? 100 - yards : yards, 2, 98)}%`;
+      const line = projectedLine();
+      $("miniField").hidden = playResult.kind !== "play" && playResult.kind !== "loss";
+      $("miniVisitorGoal").textContent = `${teamName(state.matchup.visitor)} goal`;
+      $("miniHomeGoal").textContent = `${teamName(state.matchup.home)} goal`;
+      $("miniStart").style.left = pos(board.yardLine);
+      $("miniBall").style.left = pos(line);
+      $("miniBall").textContent = line >= 100 ? "TD" : (line <= 50 ? line : 100 - line);
+      $("miniBall").setAttribute("aria-valuenow", line);
+      const gainLine = board.gainLine ?? clamp(board.yardLine + board.distance, 1, 100);
+      $("miniGain").style.left = pos(gainLine);
+      const gained = line - board.yardLine;
+      $("miniCaption").textContent = `${line >= 100 ? "Touchdown" : formatFieldSpot(fieldTeam, line)} · ${gained >= 0 ? "+" : "−"}${Math.abs(gained)} yd · drag the ball or use the buttons`;
+    }
+
+    function renderPlayResultDialog() {
+      const kind = playResult.kind;
+      for (const button of document.querySelectorAll("[data-result-kind]")) button.setAttribute("aria-pressed", button.dataset.resultKind === kind);
+      for (const button of document.querySelectorAll("[data-result-seconds]")) button.setAttribute("aria-pressed", Number(button.dataset.resultSeconds) === playResult.seconds);
+      $("playResultYardsControl").hidden = kind !== "play" && kind !== "loss";
+      $("playResultYardsLabel").textContent = kind === "loss" ? "Yards lost" : "Yards gained (use a minus sign for a loss)";
+      renderMiniField();
+      $("playResultPreview").textContent = `Result: ${computePlayResult().text}`;
+    }
+
+    function openPlayResultDialog() {
+      if (!state.started || state.gameOver) {
+        notify("Start the game first to use Play result.");
+        return;
+      }
+      if (!validateTabletopInputs()) return;
+      playResult.kind = "play";
+      playResult.seconds = playResultDefaults.play;
+      $("playResultYards").value = "";
+      renderPlayResultDialog();
+      $("playResultDialog").showModal();
+      $("playResultYards").focus();
+    }
+
+    function confirmPlayResult() {
+      const result = computePlayResult();
+      const board = state.tabletop;
+      const elapsed = (board.quarter - 1) * 900 + (900 - result.clock) - state.elapsedGameSeconds;
+      if (elapsed < 0) {
+        notify("The tabletop clock cannot be earlier than the current game time.");
+        return;
+      }
+      $("playResultDialog").close();
+      pushUndo("play");
+      board.clock = result.clock;
+      if (!result.handoff) {
+        board.yardLine = result.yardLine;
+        board.down = result.down;
+        board.distance = result.distance;
+        board.gainLine = result.gainLine;
+        state.ball = result.yardLine;
+        render();
+        return;
+      }
+      if (result.handoff === "touchdown") board[`${result.role}Score`] = clamp(board[`${result.role}Score`] + 6, 0, 99);
+      render();
+      const select = $("manualDriveResult");
+      const previous = select.value;
+      select.value = result.handoff;
+      const driveCount = state.driveNumber;
+      suppressUndo = true;
+      try {
+        recordAndSwitchDrive();
+      } finally {
+        suppressUndo = false;
+        select.value = previous;
+      }
+      if (state.driveNumber === driveCount) {
+        undoPlayResult();
+        return;
+      }
+      board.down = 1;
+      board.distance = Math.min(10, 100 - board.yardLine);
+      board.gainLine = null;
+      render();
+    }
+
+    function nudgeField(yards) {
+      if (state.gameOver) return;
+      pushUndo();
+      setFieldPosition(state.tabletop.yardLine + yards);
     }
 
     function setFieldPosition(ownYards) {
@@ -1038,7 +1439,7 @@
         ? "Final score"
         : state.started ? `${teamName(state.matchup[state.possession])} possession` : "Set the opening possession to begin.";
       const fieldTeam = activeFieldTeam();
-      const fieldYards = state.started ? state.ball : 25;
+      const fieldYards = state.started ? state.ball : state.tabletop.yardLine;
       const visibleYards = fieldYards <= 50 ? fieldYards : 100 - fieldYards;
       const fieldSpot = formatFieldSpot(fieldTeam, fieldYards);
       $("ballTag").textContent = `Ball: ${fieldSpot}`;
@@ -1169,6 +1570,7 @@
     }
 
     function startGame() {
+      if (!validateTabletopInputs()) return;
       if (!teamProfiles[state.matchup.home]?.capabilities?.complete || !teamProfiles[state.matchup.visitor]?.capabilities?.complete || state.matchup.home === state.matchup.visitor) {
         notify("Load a season PDF and select two complete, different team profiles first.");
         return;
@@ -1177,6 +1579,7 @@
       const startingInProgress = state.startMode === "in-progress";
       const seed = $("seedInput").value.trim() || createRandomSeed();
       state.started = true;
+      undoStack.length = 0;
       state.gameOver = false;
       state.possession = first;
       if (startingInProgress) {
@@ -1221,6 +1624,7 @@
     }
 
     function openStartConfirmation() {
+      if (!validateTabletopInputs()) return;
       if (!teamProfiles[state.matchup.home]?.capabilities?.complete || !teamProfiles[state.matchup.visitor]?.capabilities?.complete || state.matchup.home === state.matchup.visitor) {
         notify("Load a season PDF and select two complete, different team profiles first.");
         return;
@@ -1727,6 +2131,7 @@
 
     function openDriveConfirmation() {
       if (!state.started || state.gameOver) return;
+      if (!validateTabletopInputs()) return;
       const board = state.tabletop;
       const role = state.possession;
       const period = state.overtime ? "Overtime" : `${ordinal(board.quarter)} quarter`;
@@ -1751,6 +2156,7 @@
 
     function simulateDrive() {
       if (!state.started || state.gameOver) return;
+      if (!validateTabletopInputs()) return;
       const role = state.possession;
       const opponentRole = other(role);
       const startSpot = clamp(state.ball, 1, 99);
@@ -1971,8 +2377,34 @@
       render();
     }
 
+    const manualDriveLabels = { punt: "Punt", "field-goal": "Field goal", touchdown: "Touchdown", turnover: "Turnover", downs: "Turnover on downs", safety: "Safety", other: "Other" };
+
+    function openRecordConfirmation() {
+      if (!state.started || state.gameOver) return;
+      if (!validateTabletopInputs()) return;
+      const board = state.tabletop;
+      const role = state.possession;
+      const nextRole = other(role);
+      const elapsed = (board.quarter - 1) * 900 + (900 - board.clock) - state.elapsedGameSeconds;
+      if (elapsed < 0) {
+        notify("The tabletop clock cannot be earlier than the current game time.");
+        return;
+      }
+      const points = Math.max(0, board[`${role}Score`] - state.score[role]);
+      const nextSpot = nextTeamStartingSpot(nextRole);
+      const label = manualDriveLabels[$("manualDriveResult").value];
+      const periodEnds = board.clock === 0 && (board.quarter === 2 || board.quarter === 4);
+      $("recordConfirmUpdate").textContent = `Will record: ${teamName(state.matchup[role])} drive #${state.driveNumbers[role] + 1}, result "${label}", ${points ? `+${points} points` : "no points"}, ${clockText(elapsed)} elapsed. Score set to ${teamName(state.matchup.home)} ${board.homeScore}, ${teamName(state.matchup.visitor)} ${board.visitorScore}.`;
+      $("recordConfirmResult").textContent = periodEnds
+        ? `The clock is at 0:00 in the ${ordinal(board.quarter)} quarter, so the period will end and the game state will be set by that rule (halftime, end of regulation, or final).`
+        : `Game state afterward: ${teamName(state.matchup[nextRole])} ball at ${formatFieldSpot(nextRole, nextSpot)}, 1st & ${Math.min(10, 100 - nextSpot)}; ${ordinal(board.quarter)} quarter, ${clockText(board.clock)} left.`;
+      $("recordConfirmDialog").showModal();
+      $("cancelRecordButton").focus();
+    }
+
     function recordAndSwitchDrive() {
       if (!state.started || state.gameOver) return;
+      if (!validateTabletopInputs()) return;
       const role = state.possession;
       const targetElapsed = (state.tabletop.quarter - 1) * 900 + (900 - state.tabletop.clock);
       const elapsed = targetElapsed - state.elapsedGameSeconds;
@@ -1981,10 +2413,11 @@
         return;
       }
       const result = $("manualDriveResult").value;
+      pushUndo();
       const points = Math.max(0, state.tabletop[`${role}Score`] - state.score[role]);
       const nextRole = other(role);
       const nextSpot = nextTeamStartingSpot(nextRole);
-      const label = { punt: "Punt", "field-goal": "Field goal", touchdown: "Touchdown", turnover: "Turnover", downs: "Turnover on downs", safety: "Safety", other: "Other" }[result];
+      const label = manualDriveLabels[result];
       state.score[role] = clamp(state.tabletop[`${role}Score`], 0, 99);
       state.score.home = clamp(state.tabletop.homeScore, 0, 99);
       state.score.visitor = clamp(state.tabletop.visitorScore, 0, 99);
@@ -2010,12 +2443,14 @@
 
     function switchPossession() {
       if (!state.started || state.gameOver) return;
+      if (!validateTabletopInputs()) return;
       const targetElapsed = (state.tabletop.quarter - 1) * 900 + (900 - state.tabletop.clock);
       const elapsed = targetElapsed - state.elapsedGameSeconds;
       if (elapsed < 0) {
         notify("The tabletop clock cannot be earlier than the current game time.");
         return;
       }
+      pushUndo();
       state.score.visitor = clamp(state.tabletop.visitorScore, 0, 99);
       state.score.home = clamp(state.tabletop.homeScore, 0, 99);
       advanceClock(elapsed);
@@ -2035,6 +2470,7 @@
 
     function resetForAnotherGame() {
       state.started = false;
+      undoStack.length = 0;
       state.gameOver = false;
       state.startMode = "new";
       state.entries = [];
@@ -2162,8 +2598,33 @@
       });
     }
     $("rollPlayDiceButton").addEventListener("click", rollPlayCallDice);
+    $("boardMatrix").addEventListener("click", (event) => {
+      const cell = event.target.closest("td");
+      if (!cell) return;
+      if (cell.dataset.blue) {
+        state.tabletop.blueDie = Number(cell.dataset.blue);
+        state.tabletop.pickedBlue = true;
+      } else if (cell.dataset.row) {
+        state.tabletop.row = Number(cell.dataset.row);
+        state.tabletop.column = Number(cell.dataset.column);
+        state.tabletop.pickedPlay = true;
+      }
+      render();
+    });
+    $("clearPickButton").addEventListener("click", () => {
+      state.tabletop.pickedPlay = false;
+      state.tabletop.pickedBlue = false;
+      render();
+    });
     $("rollActualOffPlay").addEventListener("click", () => rollActualDice("offPlay"));
-    $("rollAllActualDice").addEventListener("click", rollAllActualDice);
+    function setActualRollsOpen(open) {
+      $("actualRollsToggle").setAttribute("aria-expanded", open);
+      $("actualRollRows").hidden = !open;
+    }
+    $("rollAllActualDice").addEventListener("click", () => { setActualRollsOpen(true); rollAllActualDice(); });
+    $("actualRollsToggle").addEventListener("click", () => {
+      setActualRollsOpen($("actualRollsToggle").getAttribute("aria-expanded") !== "true");
+    });
     $("rollActualPassYards").addEventListener("click", () => rollActualDice("passYards"));
     $("rollActualSecRec").addEventListener("click", () => rollActualDice("secRec"));
     $("rollActualScramble").addEventListener("click", () => rollActualDice("scramble"));
@@ -2171,11 +2632,18 @@
     $("simulateButton").addEventListener("click", openDriveConfirmation);
     $("cancelDriveButton").addEventListener("click", () => $("driveConfirmDialog").close());
     $("confirmDriveButton").addEventListener("click", () => {
+      if (!validateTabletopInputs()) return;
       $("driveConfirmDialog").close();
+      pushUndo();
       applyTabletopGameStateForDrive();
       simulateDrive();
     });
-    $("recordButton").addEventListener("click", recordAndSwitchDrive);
+    $("recordButton").addEventListener("click", openRecordConfirmation);
+    $("cancelRecordButton").addEventListener("click", () => $("recordConfirmDialog").close());
+    $("confirmRecordButton").addEventListener("click", () => {
+      $("recordConfirmDialog").close();
+      recordAndSwitchDrive();
+    });
     $("switchPossessionButton").addEventListener("click", switchPossession);
     $("newGameButton").addEventListener("click", openRestartDialog);
     $("restartGameButton").addEventListener("click", openRestartDialog);
@@ -2187,6 +2655,7 @@
     $("firstPossession").addEventListener("change", render);
     for (const button of document.querySelectorAll(".down-button")) {
       button.addEventListener("click", () => {
+        pushUndo();
         state.tabletop.down = Number(button.dataset.down);
         render();
       });
@@ -2194,17 +2663,74 @@
     $("clockMinusForty").addEventListener("click", () => adjustTabletopClock(-40));
     $("firstDownButton").addEventListener("click", () => {
       const board = state.tabletop;
+      pushUndo();
       board.down = 1;
       board.distance = Math.min(10, 100 - board.yardLine);
       board.gainLine = null;
       render();
     });
     $("clockMinusTen").addEventListener("click", () => adjustTabletopClock(-10));
+    for (const button of document.querySelectorAll("[data-nudge]")) {
+      button.addEventListener("click", () => nudgeField(Number(button.dataset.nudge)));
+    }
+    $("undoButton").addEventListener("click", undoLastAction);
+    $("undoPlayButton").addEventListener("click", undoPlayResult);
+    $("playResultButton").addEventListener("click", openPlayResultDialog);
+    $("cancelPlayResultButton").addEventListener("click", () => $("playResultDialog").close());
+    $("confirmPlayResultButton").addEventListener("click", confirmPlayResult);
+    $("playResultYards").addEventListener("input", renderPlayResultDialog);
+    for (const button of document.querySelectorAll("[data-mini-nudge]")) {
+      button.addEventListener("click", () => setProjectedLine(projectedLine() + Number(button.dataset.miniNudge)));
+    }
+    let miniDragging = false;
+    const miniFromPointer = (event) => {
+      const rect = $("miniTrack").getBoundingClientRect();
+      if (!rect.width) return;
+      const ratio = clamp((event.clientX - rect.left) / rect.width, 0, 1);
+      setProjectedLine(state.matchup[state.possession] === state.matchup.home ? (1 - ratio) * 100 : ratio * 100);
+    };
+    $("miniTrack").addEventListener("pointerdown", (event) => {
+      if (event.button !== 0) return;
+      miniDragging = true;
+      $("miniTrack").setPointerCapture(event.pointerId);
+      miniFromPointer(event);
+    });
+    $("miniTrack").addEventListener("pointermove", (event) => { if (miniDragging) miniFromPointer(event); });
+    $("miniTrack").addEventListener("pointerup", () => { miniDragging = false; });
+    $("miniTrack").addEventListener("pointercancel", () => { miniDragging = false; });
+    $("miniBall").addEventListener("keydown", (event) => {
+      const steps = event.shiftKey ? 10 : 1;
+      const sign = state.matchup[state.possession] === state.matchup.home ? -1 : 1;
+      let delta = 0;
+      if (event.key === "ArrowRight") delta = sign * steps;
+      else if (event.key === "ArrowLeft") delta = -sign * steps;
+      else if (event.key === "ArrowUp") delta = steps;
+      else if (event.key === "ArrowDown") delta = -steps;
+      else return;
+      setProjectedLine(projectedLine() + delta);
+      event.preventDefault();
+    });
+    $("playResultYards").addEventListener("keydown", (event) => { if (event.key === "Enter") confirmPlayResult(); });
+    for (const button of document.querySelectorAll("[data-result-kind]")) {
+      button.addEventListener("click", () => {
+        playResult.kind = button.dataset.resultKind;
+        playResult.seconds = playResultDefaults[playResult.kind];
+        renderPlayResultDialog();
+      });
+    }
+    for (const button of document.querySelectorAll("[data-result-seconds]")) {
+      button.addEventListener("click", () => {
+        playResult.seconds = Number(button.dataset.resultSeconds);
+        renderPlayResultDialog();
+      });
+    }
+    $("clockMinusTwenty").addEventListener("click", () => adjustTabletopClock(-20));
     $("clockMinusMinute").addEventListener("click", () => adjustTabletopClock(-60));
     $("clockPlusMinute").addEventListener("click", () => adjustTabletopClock(60));
     let draggingBall = false;
     $("fieldTrack").addEventListener("pointerdown", (event) => {
       if (event.button !== 0) return;
+      pushUndo();
       draggingBall = true;
       $("fieldTrack").setPointerCapture(event.pointerId);
       updateFieldFromPointer(event);
